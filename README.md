@@ -77,6 +77,33 @@ predichos <- graficar_predichos(
 print(predichos)
 ```
 
+## Diseños Experimentales Específicos (Agrícolas y Biológicos)
+
+`easyModels` ofrece wrappers especializados con "opinión bioestadística" para evitar escribir fórmulas complejas de efectos mixtos de `lme4` en diseños comunes:
+
+### Bloques Completos al Azar (RCBD)
+Para un diseño clásico de bloques al azar, la función `analizar_bloques_azar()` añade automáticamente la estructura `(1 | bloque)`:
+
+```r
+modelo_rcbd <- analizar_bloques_azar(
+  datos = datos_rcbd,
+  formula_fijos = Altura ~ Tratamiento,
+  bloque = "Bloque"
+)
+```
+
+### Parcelas Divididas (Split-Plot)
+En experimentos donde un factor se aplica a una unidad mayor (parcela principal) y otro factor a sub-unidades (subparcelas), la función `analizar_parcelas_divididas()` gestiona la correcta anidación del error de la parcela principal `(1 | bloque) + (1 | bloque:parcela_principal)`:
+
+```r
+modelo_split <- analizar_parcelas_divididas(
+  datos = datos_split,
+  formula_fijos = Rendimiento ~ Riego * Genotipo,
+  bloque = "Bloque",
+  parcela_principal = "Riego"
+)
+```
+
 ## GLM binomial con odds ratios
 
 Para respuestas presencia/ausencia, germinacion, mortalidad o incidencia, usa un GLM binomial. `easyModels` calcula odds ratios y permite graficar probabilidades predichas:
@@ -134,14 +161,14 @@ modelo_nb <- analizar_glm(
 )
 ```
 
-Para conteos con bloques, parcelas, placas o mediciones repetidas, usa GLMM:
+Para conteos con bloques, parcelas, placas o mediciones repetidas, usa GLMM. Si hay sobredispersión, puedes definir `tipo = "binomial_negativa"` (o `"negativa_binomial"`) para ajustar un modelo binomial negativo automáticamente usando `lme4::glmer.nb()`:
 
 ```r
 modelo_glmm_nb <- analizar_glmm(
   datos = datos,
   formula_fijos = conteo ~ tratamiento,
   aleatorios = "(1 | bloque)",
-  tipo = "negativa_binomial"
+  tipo = "binomial_negativa"
 )
 ```
 
@@ -243,10 +270,23 @@ DHARMa::testZeroInflation(res)
 
 `obtener_posthoc()` usa `emmeans`, por lo que funciona con modelos compatibles como `lm`, `aov`, `glm`, `lmer`, `glmer` y `glmer.nb`. En modelos gaussianos devuelve diferencias estimadas; en modelos binomiales con `tipo_respuesta = "response"` devuelve odds ratios; y en modelos con link log puede devolver razones de tasas.
 
+El paquete permite pintar automáticamente letras de significancia Tukey (Compact Letter Display - CLD) directamente en `graficar_predichos()` con `mostrar_letras = TRUE` (requiere tener el paquete `multcomp` instalado):
+
 ```r
 posthoc <- obtener_posthoc(modelo, "tratamiento", tipo_respuesta = "response")
 graficar_posthoc(posthoc)
 
+# Graficar predichos con letras de significancia Tukey
+graficar_predichos(
+  modelo,
+  predictor = "tratamiento",
+  mostrar_letras = TRUE,
+  alfa_letras = 0.05,
+  eje_x = "Tratamiento",
+  eje_y = "Altura Promedio (cm)"
+)
+
+# Predichos separados por otro factor
 graficar_predichos(
   modelo,
   predictor = "tratamiento",
@@ -260,11 +300,13 @@ graficar_predichos(
 - `analizar_lm()`: ajusta modelos lineales con diagnosticos clasicos.
 - `analizar_glm()`: ajusta GLM gaussianos, binomiales, Poisson, cuasi-Poisson y binomial negativa.
 - `analizar_lmm()`: ajusta modelos lineales mixtos con `lme4::lmer`, incluyendo control de `REML`.
-- `analizar_glmm()`: ajusta GLMM binomiales, Poisson y binomial negativa con diagnosticos `DHARMa`.
+- `analizar_bloques_azar()`: ajusta diseños de Bloques Completos al Azar (RCBD).
+- `analizar_parcelas_divididas()`: ajusta diseños de Parcelas Divididas (Split-Plot) con anidamiento de error.
+- `analizar_glmm()`: ajusta GLMM binomiales, Poisson y binomiales negativas con diagnosticos `DHARMa` y soporte automático para `binomial_negativa`.
 - `analizar_odds_ratio()`: calcula odds ratios e intervalos de confianza para modelos binomiales.
 - `obtener_posthoc()`: calcula comparaciones multiples con `emmeans` para LM, GLM, LMM y GLMM.
 - `graficar_posthoc()`: grafica diferencias, razones de tasas u odds ratios.
-- `graficar_predichos()`: grafica predichos marginales con `emmeans`.
+- `graficar_predichos()`: grafica predichos marginales con soporte para letras de significancia Tukey (CLD).
 
 ## Autor
 
