@@ -1,0 +1,30 @@
+Package: easyModels
+Type: Package
+Title: Herramientas Automatizadas para Modelos Lineales, Mixtos y Gráficos Científicos
+Version: 0.1.0
+Authors@R: 
+    person(
+        given = "Paul Alexander",
+        family = "Lopez Peña",
+        email = "paullopezpena@gmail.com",
+        role = c("aut", "cre"),
+        comment = c(Institucional = "plopezp7@estudiante.uc.cl")
+    )
+Description: Paquete diseñado para automatizar el análisis de diseños experimentales biológicos, incluyendo la jerarquía de modelos lineales (lm, aov), GLM, modelos mixtos (LMM, GLMM con soporte de DHARMa), binomial negativa, odds ratios, análisis post-hoc con emmeans y exportación de gráficos de predichos listos para publicación.
+License: MIT + file LICENSE
+URL: https://github.com/PALP31/easyModels
+BugReports: https://github.com/PALP31/easyModels/issues
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 4.0)
+Imports:
+    lme4,
+    emmeans,
+    ggplot2,
+    stats,
+    graphics,
+    DHARMa,
+    rlang,
+    MASS
+Config/roxygen2/version: 8.0.0
