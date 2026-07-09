@@ -8,7 +8,8 @@ analizar_glmm(
   datos,
   formula_fijos,
   aleatorios,
-  tipo = c("conteos", "presencia_ausencia", "poisson", "binomial", "negativa_binomial"),
+  tipo = c("conteos", "presencia_ausencia", "poisson", "binomial", "negativa_binomial",
+    "binomial_negativa"),
   diagnostico_dharma = TRUE
 )
 }
@@ -20,8 +21,8 @@ analizar_glmm(
 \item{aleatorios}{Una cadena de caracteres que define la estructura de efectos aleatorios (ej. \code{"(1 | bloque)"}).}
 
 \item{tipo}{Tipo de respuesta. Puede ser \code{"conteos"},
-\code{"presencia_ausencia"}, \code{"poisson"}, \code{"binomial"} o
-\code{"negativa_binomial"}.}
+\code{"presencia_ausencia"}, \code{"poisson"}, \code{"binomial"},
+\code{"negativa_binomial"} o \code{"binomial_negativa"}.}
 
 \item{diagnostico_dharma}{Valor logico. Si es \code{TRUE}, genera diagnosticos de residuos simulados con \code{DHARMa}.}
 }

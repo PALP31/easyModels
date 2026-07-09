@@ -12,7 +12,9 @@ graficar_predichos(
   at = NULL,
   titulo = "Valores predichos",
   eje_x = predictor,
-  eje_y = "Prediccion marginal"
+  eje_y = "Prediccion marginal",
+  mostrar_letras = FALSE,
+  alfa_letras = 0.05
 )
 }
 \arguments{
@@ -33,6 +35,13 @@ biologica o \code{"link"} para la escala del predictor lineal.}
 \item{eje_x}{Etiqueta del eje X.}
 
 \item{eje_y}{Etiqueta del eje Y.}
+
+\item{mostrar_letras}{Valor logico. Si es \code{TRUE}, calcula y muestra las
+letras de significancia de Tukey sobre los puntos o barras de error.
+(Requiere el paquete \code{multcomp}).}
+
+\item{alfa_letras}{Nivel de significancia (alfa) para la asignacion de letras.
+Por defecto, \code{0.05}.}
 }
 \value{
 Un objeto \code{ggplot}.
@@ -41,4 +50,15 @@ Un objeto \code{ggplot}.
 Genera graficos de medias marginales estimadas o predichos marginales usando
 \code{emmeans}. Funciona con modelos compatibles con \code{emmeans}, incluidos
 \code{lm}, \code{glm}, \code{lmer} y \code{glmer}.
+Adicionalmente, puede incorporar letras de significancia (Compact Letter Display - CLD)
+para representar diferencias significativas de Tukey.
+}
+\examples{
+\dontrun{
+  modelo <- lm(Sepal.Length ~ Species, data = iris)
+  # Grafico basico
+  graficar_predichos(modelo, "Species")
+  # Grafico con letras de Tukey
+  graficar_predichos(modelo, "Species", mostrar_letras = TRUE)
+}
 }

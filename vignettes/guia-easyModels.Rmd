@@ -1,0 +1,197 @@
+---
+title: "Guía de Uso de easyModels: Modelos Mixtos y Gráficos Científicos"
+author: "Paul Alexander Lopez Peña"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Guía de Uso de easyModels: Modelos Mixtos y Gráficos Científicos}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+## Introducción
+
+El paquete `easyModels` proporciona herramientas simplificadas y con "opinión bioestadística" para investigadores y estudiantes en ciencias biológicas y agrícolas. Permite ajustar modelos lineales, generalizados y mixtos sin tener que lidiar con la compleja sintaxis de fórmulas de `lme4`, facilitando además la obtención de análisis post-hoc y gráficos de nivel de publicación con letras de significancia.
+
+En esta guía, revisaremos tres casos típicos de análisis:
+1. Un diseño de **Bloques Completos al Azar (RCBD)** con visualización de letras de Tukey (CLD).
+2. Un diseño de **Parcelas Divididas (Split-Plot)** para evaluar estrés.
+3. Un **Modelo Mixto Generalizado (GLMM)** de conteo con sobredispersión y ajuste de **Binomial Negativa**.
+
+---
+
+## 1. Diseño de Bloques Completos al Azar (RCBD)
+
+Este diseño es el estándar en experimentos de campo o invernadero donde existe un gradiente ambiental (por ejemplo, luz, temperatura o riego por mesas) que se controla agrupando las unidades experimentales en bloques homogéneos.
+
+### Simulación de Datos
+Imaginemos que evaluamos la altura de plantas de trigo bajo tres tratamientos de estrés térmico (Control, Estrés Moderado y Estrés Severo) distribuidos en 4 bloques.
+
+```{r}
+library(easyModels)
+library(ggplot2)
+
+set.seed(123)
+datos_rcbd <- data.frame(
+  Tratamiento = factor(rep(c("Control", "Moderado", "Severo"), each = 12)),
+  Bloque = factor(rep(1:4, times = 9)),
+  Altura = rnorm(36, mean = rep(c(45, 38, 25), each = 12), sd = 3)
+)
+
+head(datos_rcbd)
+```
+
+### Ajuste del Modelo con `analizar_bloques_azar()`
+Ajustamos el modelo lineal mixto definiendo la respuesta y el tratamiento en los efectos fijos, y especificando el factor de bloque. La función se encarga de estructurar el efecto aleatorio como `(1 | Bloque)`.
+
+```{r, fig.show='hold'}
+# Ajuste y diagnostico automatico de residuos
+modelo_rcbd <- analizar_bloques_azar(
+  datos = datos_rcbd,
+  formula_fijos = Altura ~ Tratamiento,
+  bloque = "Bloque",
+  REML = TRUE,
+  diagnosticos = TRUE
+)
+```
+
+### Gráfico de Predichos con Letras de Tukey (CLD)
+Para presentar los resultados en un manuscrito, es fundamental graficar las medias y sus intervalos de confianza, agregando las letras que resumen las diferencias estadísticas significativas. La función `graficar_predichos()` conecta internamente con `multcomp::cld()` si activamos `mostrar_letras = TRUE`.
+
+```{r}
+grafico_rcbd <- graficar_predichos(
+  modelo = modelo_rcbd,
+  predictor = "Tratamiento",
+  mostrar_letras = TRUE,
+  alfa_letras = 0.05,
+  titulo = "Altura de Plantas de Trigo bajo Estrés Térmico",
+  eje_x = "Tratamiento de Temperatura",
+  eje_y = "Altura Promedio (cm)"
+)
+
+# Visualizar el grafico
+grafico_rcbd
+```
+
+---
+
+## 2. Diseño de Parcelas Divididas (Split-Plot)
+
+Este diseño ocurre cuando tenemos dos factores y uno de ellos requiere unidades experimentales más grandes (parcela principal) debido a restricciones operativas (por ejemplo, sistemas de riego, cámaras de calor), mientras que el segundo factor se puede aleatorizar en sub-unidades (subparcelas).
+
+### Simulación de Datos
+Evaluamos el rendimiento de trigo con dos factores:
+* **Riego** (Secano vs Riego completo), aplicado a nivel de parcela principal (mesa de invernadero).
+* **Genotipo** (G1, G2, G3), aleatorizado en macetas dentro de cada parcela principal.
+* **Bloque** (4 bloques).
+
+```{r}
+set.seed(456)
+datos_split <- data.frame(
+  Riego = factor(rep(c("Riego", "Secano"), each = 24)),
+  Genotipo = factor(rep(rep(c("G1", "G2", "G3"), each = 8), times = 2)),
+  Bloque = factor(rep(1:4, times = 12)),
+  Rendimiento = rnorm(48, mean = 8, sd = 1.2)
+)
+
+# Añadimos efectos simulados
+datos_split$Rendimiento <- datos_split$Rendimiento + 
+  ifelse(datos_split$Riego == "Secano", -2.1, 0) +
+  ifelse(datos_split$Genotipo == "G3" & datos_split$Riego == "Secano", -1.5, 0.5)
+
+head(datos_split)
+```
+
+### Ajuste con `analizar_parcelas_divididas()`
+La función estructurará automáticamente el error de la parcela principal como `(1 | Bloque) + (1 | Bloque:Riego)` para asegurar que las pruebas de hipótesis del factor principal (Riego) utilicen el término de error correcto.
+
+```{r, fig.show='hold'}
+modelo_split <- analizar_parcelas_divididas(
+  datos = datos_split,
+  formula_fijos = Rendimiento ~ Riego * Genotipo,
+  bloque = "Bloque",
+  parcela_principal = "Riego",
+  diagnosticos = TRUE
+)
+```
+
+### Análisis Post-Hoc e Interacción
+Podemos obtener las comparaciones de Tukey para evaluar la interacción entre ambos factores:
+
+```{r}
+# Obtener comparaciones post-hoc para la combinacion Riego y Genotipo
+posthoc_split <- obtener_posthoc(modelo_split, "Riego")
+head(posthoc_split)
+```
+
+---
+
+## 3. Modelos Mixtos Generalizados (GLMM) y Binomial Negativa
+
+Cuando la variable respuesta consiste en datos de conteo (por ejemplo, número de pulgones en una hoja o lesiones fúngicas), la distribución de Poisson es la primera opción. Sin embargo, en biología es muy común observar **sobredispersión** (la varianza es mayor que la media).
+
+### Simulación de Datos
+Contamos el número de lesiones de *Trichoderma* por hoja bajo diferentes dosis de un bioestimulante en 5 invernaderos (bloques aleatorios).
+
+```{r}
+set.seed(789)
+invernadero <- factor(rep(1:5, each = 16))
+dosis <- factor(rep(rep(c("D0", "D1", "D2", "D3"), each = 4), times = 5))
+# Simulacion de datos con alta sobredispersion
+mu <- rep(c(2, 5, 12, 18), each = 4)
+lesiones <- rnbinom(80, mu = mu, size = 1.5)
+
+datos_glmm <- data.frame(
+  Invernadero = invernadero,
+  Dosis = dosis,
+  Lesiones = lesiones
+)
+```
+
+### Detección Automática de Sobredispersion
+Ajustamos un modelo de Poisson normal usando `tipo = "conteos"` (o `"poisson"`):
+
+```{r}
+modelo_poisson <- analizar_glmm(
+  datos = datos_glmm,
+  formula_fijos = Lesiones ~ Dosis,
+  aleatorios = "(1 | Invernadero)",
+  tipo = "poisson",
+  diagnostico_dharma = FALSE  # Desactivado para simplificar la salida de consola
+)
+```
+
+La consola nos muestra una advertencia clara:
+`ADVERTENCIA: El ratio de sobredispersion es mayor a 1.5. Esto sugiere sobredispersion en los datos de conteo.`
+
+### Ajuste con Binomial Negativa (`tipo = "binomial_negativa"`)
+Hacemos caso a la sugerencia y ajustamos el modelo usando la familia Binomial Negativa. Esto llamará internamente a `lme4::glmer.nb()` de forma transparente.
+
+```{r}
+modelo_nb <- analizar_glmm(
+  datos = datos_glmm,
+  formula_fijos = Lesiones ~ Dosis,
+  aleatorios = "(1 | Invernadero)",
+  tipo = "binomial_negativa",
+  diagnostico_dharma = FALSE
+)
+```
+
+El ratio de sobredispersión ahora se ajustará correctamente a los parámetros de la distribución Binomial Negativa, protegiendo al análisis de falsos positivos debido a subestimación de errores estándar.
+
+---
+
+## Conclusión
+
+El uso de `easyModels` reduce la fricción metodológica al analizar experimentos complejos. Ya no es necesario memorizar la sintaxis de efectos mixtos de `lme4` ni pasar horas estructurando letras de significancia en softwares externos. Con funciones directas como `analizar_bloques_azar()`, `analizar_parcelas_divididas()` y `graficar_predichos(mostrar_letras = TRUE)`, tu flujo de análisis queda completamente documentado y reproducible de principio a fin.

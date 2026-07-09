@@ -10,14 +10,14 @@
 #' @param formula_fijos Una formula de R o una cadena de caracteres para la parte de efectos fijos (ej. \code{y ~ x1}).
 #' @param aleatorios Una cadena de caracteres que define la estructura de efectos aleatorios (ej. \code{"(1 | bloque)"}).
 #' @param tipo Tipo de respuesta. Puede ser \code{"conteos"},
-#'   \code{"presencia_ausencia"}, \code{"poisson"}, \code{"binomial"} o
-#'   \code{"negativa_binomial"}.
+#'   \code{"presencia_ausencia"}, \code{"poisson"}, \code{"binomial"},
+#'   \code{"negativa_binomial"} o \code{"binomial_negativa"}.
 #' @param diagnostico_dharma Valor logico. Si es \code{TRUE}, genera diagnosticos de residuos simulados con \code{DHARMa}.
 #'
 #' @return Un objeto de la clase \code{merMod} (ajuste de glmer) con el modelo ajustado.
 #' @export
 #'
-#' @importFrom lme4 glmer fixef
+#' @importFrom lme4 glmer fixef glmer.nb
 #' @importFrom stats as.formula residuals df.residual binomial poisson
 #'
 #' @examples
@@ -36,13 +36,14 @@
 analizar_glmm <- function(datos,
                           formula_fijos,
                           aleatorios,
-                          tipo = c("conteos", "presencia_ausencia", "poisson", "binomial", "negativa_binomial"),
+                          tipo = c("conteos", "presencia_ausencia", "poisson", "binomial", "negativa_binomial", "binomial_negativa"),
                           diagnostico_dharma = TRUE) {
   message("=== Iniciando Ajuste de GLMM ===")
   
   tipo <- match.arg(tipo)
   if (tipo == "conteos") tipo <- "poisson"
   if (tipo == "presencia_ausencia") tipo <- "binomial"
+  if (tipo == "binomial_negativa") tipo <- "negativa_binomial"
 
   formula_completa <- construir_formula_mixta(formula_fijos, aleatorios)
   

@@ -3,6 +3,8 @@
 #' Genera graficos de medias marginales estimadas o predichos marginales usando
 #' \code{emmeans}. Funciona con modelos compatibles con \code{emmeans}, incluidos
 #' \code{lm}, \code{glm}, \code{lmer} y \code{glmer}.
+#' Adicionalmente, puede incorporar letras de significancia (Compact Letter Display - CLD)
+#' para representar diferencias significativas de Tukey.
 #'
 #' @param modelo Modelo ajustado compatible con \code{emmeans}.
 #' @param predictor Nombre del predictor que se graficara en el eje X.
@@ -14,10 +16,24 @@
 #' @param titulo Titulo del grafico.
 #' @param eje_x Etiqueta del eje X.
 #' @param eje_y Etiqueta del eje Y.
+#' @param mostrar_letras Valor logico. Si es \code{TRUE}, calcula y muestra las
+#'   letras de significancia de Tukey sobre los puntos o barras de error.
+#'   (Requiere el paquete \code{multcomp}).
+#' @param alfa_letras Nivel de significancia (alfa) para la asignacion de letras.
+#'   Por defecto, \code{0.05}.
 #'
 #' @return Un objeto \code{ggplot}.
 #' @export
 #' @importFrom rlang .data
+#'
+#' @examples
+#' \dontrun{
+#'   modelo <- lm(Sepal.Length ~ Species, data = iris)
+#'   # Grafico basico
+#'   graficar_predichos(modelo, "Species")
+#'   # Grafico con letras de Tukey
+#'   graficar_predichos(modelo, "Species", mostrar_letras = TRUE)
+#' }
 graficar_predichos <- function(modelo,
                                predictor,
                                por = NULL,
@@ -25,7 +41,9 @@ graficar_predichos <- function(modelo,
                                at = NULL,
                                titulo = "Valores predichos",
                                eje_x = predictor,
-                               eje_y = "Prediccion marginal") {
+                               eje_y = "Prediccion marginal",
+                               mostrar_letras = FALSE,
+                               alfa_letras = 0.05) {
   validar_predictor_modelo(modelo, predictor)
   if (!is.null(por)) {
     validar_predictor_modelo(modelo, por)
@@ -42,6 +60,44 @@ graficar_predichos <- function(modelo,
   y_col <- detectar_columna_prediccion(datos)
   intervalo <- detectar_intervalos(datos)
   es_numerico <- is.numeric(datos[[predictor]])
+
+  # Calcular e integrar letras de Tukey (CLD)
+  if (isTRUE(mostrar_letras)) {
+    if (es_numerico) {
+      warning("mostrar_letras = TRUE se ignora para predictores numericos. Solo se admite para predictores categoricos (factores).", call. = FALSE)
+    } else {
+      if (!requireNamespace("multcomp", quietly = TRUE)) {
+        stop("El paquete 'multcomp' es necesario para mostrar las letras de significancia. Instale con install.packages('multcomp').", call. = FALSE)
+      }
+      
+      cld_df <- tryCatch({
+        res <- multcomp::cld(emm, Letters = letters, alpha = alfa_letras, type = tipo_respuesta)
+        df_res <- as.data.frame(res)
+        df_res$.group <- gsub(" ", "", as.character(df_res$.group))
+        df_res
+      }, error = function(e) {
+        warning("No se pudieron calcular las letras de significancia (CLD): ", e$message, call. = FALSE)
+        NULL
+      })
+      
+      if (!is.null(cld_df)) {
+        orig_levels <- levels(datos[[predictor]])
+        if (is.null(orig_levels)) orig_levels <- unique(datos[[predictor]])
+        
+        key_cols <- predictor
+        if (!is.null(por)) {
+          key_cols <- c(key_cols, por)
+        }
+        
+        # Combinar
+        cld_sub <- cld_df[, c(key_cols, ".group"), drop = FALSE]
+        datos <- merge(datos, cld_sub, by = key_cols, all.x = TRUE)
+        
+        # Restaurar orden
+        datos[[predictor]] <- factor(datos[[predictor]], levels = orig_levels)
+      }
+    }
+  }
 
   grafico <- ggplot2::ggplot(
     datos,
@@ -106,6 +162,33 @@ graficar_predichos <- function(modelo,
           linewidth = 0.55
         )
     }
+  }
+
+  # Agregar letras de significancia al grafico si aplica
+  if (mostrar_letras && !es_numerico && ".group" %in% names(datos)) {
+    y_text_col <- if (!is.null(intervalo)) {
+      intervalo$superior
+    } else {
+      y_col
+    }
+    
+    y_max <- max(datos[[y_text_col]], na.rm = TRUE)
+    y_min <- min(datos[[if (!is.null(intervalo)) intervalo$inferior else y_col]], na.rm = TRUE)
+    rango_y <- y_max - y_min
+    offset <- if (rango_y > 0) rango_y * 0.05 else y_max * 0.05
+    if (offset == 0) offset <- 0.1
+    
+    grafico <- grafico +
+      ggplot2::geom_text(
+        ggplot2::aes(
+          y = .data[[y_text_col]] + offset,
+          label = .data[[".group"]]
+        ),
+        vjust = 0,
+        fontface = "bold",
+        color = "black",
+        show.legend = FALSE
+      )
   }
 
   return(grafico)
