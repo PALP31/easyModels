@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="man/figures/logo.png" alt="easyModels hex sticker" width="180"/>
+  <img src="man/figures/logo.png" alt="easyModels hex sticker" width="240"/>
 </div>
 
 <div align="center">
