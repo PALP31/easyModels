@@ -2,7 +2,7 @@
 % Please edit documentation in R/evaluar_modelo.R
 \name{evaluar_modelo}
 \alias{evaluar_modelo}
-\title{Evaluación de Diagnóstico de Modelo Unificada}
+\title{Evaluacion de Diagnostico de Modelo Unificada}
 \usage{
 evaluar_modelo(modelo)
 }
@@ -14,9 +14,9 @@ Devuelve de forma invisible el modelo nativo subyacente.
 }
 \description{
 Esta funcion combina herramientas de \code{performance}, \code{DHARMa} y
-\code{car} para extraer e imprimir de manera estilizada métricas clave de
-ajuste de modelos (AIC, BIC, R2, ICC, sobredispersión, singularidad) y
-lanzar los gráficos de diagnóstico correspondientes.
+\code{car} para extraer e imprimir de manera estilizada metricas clave de
+ajuste de modelos (AIC, BIC, R2, ICC, sobredispersion, singularidad) y
+lanzar los graficos de diagnostico correspondientes.
 }
 \examples{
 \dontrun{

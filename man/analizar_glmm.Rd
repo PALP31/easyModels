@@ -10,7 +10,7 @@ analizar_glmm(
   aleatorios,
   tipo = c("conteos", "presencia_ausencia", "poisson", "binomial", "negativa_binomial",
     "binomial_negativa"),
-  diagnostico_dharma = TRUE
+  diagnosticos = TRUE
 )
 }
 \arguments{
@@ -24,7 +24,7 @@ analizar_glmm(
 \code{"presencia_ausencia"}, \code{"poisson"}, \code{"binomial"},
 \code{"negativa_binomial"} o \code{"binomial_negativa"}.}
 
-\item{diagnostico_dharma}{Valor logico. Si es \code{TRUE}, genera diagnosticos de residuos simulados con \code{DHARMa}.}
+\item{diagnosticos}{Valor logico. Si es \code{TRUE}, genera diagnosticos de residuos simulados con \code{DHARMa}.}
 }
 \value{
 Un objeto unificado S3 de clase \code{easy_model}.

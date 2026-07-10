@@ -27,24 +27,24 @@ print.easy_model <- function(x, ...) {
   cli::cli_alert_info("Fórmula: {.code {formula_str}}")
   cli::cli_alert_info("Distribución: {.val {x$familia}} (Enlace: {.val {x$link}})")
   
-  # R2 si existe
-  r2_val <- tryCatch(performance::r2(x$modelo), error = function(e) NULL)
-  if (!is.null(r2_val) && is.list(r2_val)) {
-    if (!is.null(r2_val$R2_conditional)) {
-      cli::cli_alert_info("R2 Marginal: {.val {round(r2_val$R2_marginal, 3)}} | R2 Condicional: {.val {round(r2_val$R2_conditional, 3)}}")
-    } else if (!is.null(r2_val$R2)) {
-      cli::cli_alert_info("R2: {.val {round(r2_val$R2, 3)}}")
-    }
-  } else if (!is.null(r2_val)) {
-    val_r2 <- as.numeric(r2_val[1])
-    if (!is.na(val_r2)) {
-      cli::cli_alert_info("R2: {.val {round(val_r2, 3)}}")
-    }
+  # R2 robusto: usa .safe_get para no fallar ante NA lógicos o vectores atómicos
+  r2_val  <- tryCatch(suppressWarnings(performance::r2(x$modelo)), error = function(e) NULL)
+  r2_cond <- .safe_get(r2_val, "R2_conditional")
+  r2_marg <- .safe_get(r2_val, "R2_marginal")
+  r2_plain <- .safe_get(r2_val, "R2")
+  
+  if (!is.na(r2_cond)) {
+    cli::cli_alert_info("R\u00b2 Marginal: {.val {round(r2_marg, 3)}} | R\u00b2 Condicional: {.val {round(r2_cond, 3)}}")
+  } else if (!is.na(r2_marg)) {
+    cli::cli_alert_info("R\u00b2 Marginal: {.val {round(r2_marg, 3)}} | R\u00b2 Condicional: {.val NA (modelo singular)}")
+  } else if (!is.na(r2_plain)) {
+    cli::cli_alert_info("R\u00b2: {.val {round(r2_plain, 3)}}")
   }
   
   cli::cli_alert_success("Modelo listo para análisis post-hoc con 'obtener_posthoc()'.")
   invisible(x)
 }
+
 
 #' Imprimir un objeto easy_splitplot
 #'

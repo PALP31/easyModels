@@ -12,7 +12,7 @@
 #' @param tipo Tipo de respuesta. Puede ser \code{"conteos"},
 #'   \code{"presencia_ausencia"}, \code{"poisson"}, \code{"binomial"},
 #'   \code{"negativa_binomial"} o \code{"binomial_negativa"}.
-#' @param diagnostico_dharma Valor logico. Si es \code{TRUE}, genera diagnosticos de residuos simulados con \code{DHARMa}.
+#' @param diagnosticos Valor logico. Si es \code{TRUE}, genera diagnosticos de residuos simulados con \code{DHARMa}.
 #'
 #' @return Un objeto unificado S3 de clase \code{easy_model}.
 #' @export
@@ -38,7 +38,7 @@ analizar_glmm <- function(datos,
                           formula_fijos,
                           aleatorios,
                           tipo = c("conteos", "presencia_ausencia", "poisson", "binomial", "negativa_binomial", "binomial_negativa"),
-                          diagnostico_dharma = TRUE) {
+                          diagnosticos = TRUE) {
   cli::cli_alert_info("Iniciando Ajuste de GLMM...")
   
   tipo <- match.arg(tipo)
@@ -100,7 +100,7 @@ analizar_glmm <- function(datos,
     print(analizar_odds_ratio(modelo_nat))
   }
 
-  if (isTRUE(diagnostico_dharma)) {
+  if (isTRUE(diagnosticos)) {
     cli::cli_alert_info("Generando diagnósticos DHARMa de residuos simulados...")
     residuos_dharma <- DHARMa::simulateResiduals(modelo_nat)
     plot(residuos_dharma)
