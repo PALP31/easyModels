@@ -2,40 +2,92 @@
 % Please edit documentation in R/analizar_glm.R
 \name{analizar_glm}
 \alias{analizar_glm}
-\title{Ajustar y analizar un modelo lineal generalizado (GLM)}
+\title{Ajustar y analizar un Modelo Lineal Generalizado (GLM)}
 \usage{
 analizar_glm(
   datos,
   formula,
-  familia = c("gaussian", "binomial", "poisson", "quasibinomial", "quasipoisson",
-    "negativa_binomial"),
-  diagnostico_dharma = TRUE
+  familia = c("gaussian", "binomial", "binomial_probit", "binomial_cloglog", "poisson",
+    "quasipoisson", "quasibinomial", "negativa_binomial", "gamma", "gamma_inverse",
+    "gaussian_inversa", "tweedie", "beta", "zip", "zinb", "ordinal", "multinomial"),
+  diagnosticos = TRUE,
+  link_gamma = "log",
+  tweedie_p = 1.5,
+  zi_formula = ~1
 )
 }
 \arguments{
 \item{datos}{Un \code{data.frame} con las variables del modelo.}
 
-\item{formula}{Una fórmula de R para el GLM.}
+\item{formula}{Una formula de R para el GLM.}
 
-\item{familia}{Familia del modelo. Puede ser \code{"gaussian"},
-\code{"binomial"}, \code{"poisson"}, \code{"quasibinomial"},
-\code{"quasipoisson"} o \code{"negativa_binomial"}.}
+\item{familia}{Familia del modelo. Opciones:
+\itemize{
+  \item \code{"gaussian"} — Respuesta continua simetrica, errores normales.
+  \item \code{"binomial"} — Respuesta binaria 0/1 o proporcion. Link: logit.
+  \item \code{"binomial_probit"} — Igual que binomial con link probit.
+  \item \code{"binomial_cloglog"} — Binomial con link complementario log-log
+    (util para datos de supervivencia o incidencia acumulada).
+  \item \code{"poisson"} — Conteos (asume varianza = media).
+  \item \code{"quasipoisson"} — Conteos con sobredispersion (factor de dispersion estimado).
+  \item \code{"quasibinomial"} — Proporcion con sobredispersion.
+  \item \code{"negativa_binomial"} — Conteos con sobredispersion severa (via MASS::glm.nb).
+  \item \code{"gamma"} — Respuesta continua positiva y asimetrica (tiempos, concentraciones).
+    Link: log (predeterminado) o inverse.
+  \item \code{"gamma_inverse"} — Gamma con link inverso (clasico de actuaria y fisiologia).
+  \item \code{"gaussian_inversa"} — Gaussian inversa: datos continuos positivos muy sesgados
+    (tiempos de latencia, pesos extremos). Link: 1/mu^2.
+  \item \code{"tweedie"} — Familia Tweedie compuesta (mix de ceros y valores positivos
+    continuos, p.ej. precipitacion, biomasa con ausencias). Requiere paquete \code{statmod}.
+    Usar junto con \code{tweedie_p} (tipicamente entre 1 y 2).
+  \item \code{"beta"} — Datos en intervalo abierto (0,1): porcentajes, coberturas,
+    proporciones continuas. Requiere paquete \code{betareg}.
+  \item \code{"zip"} — Zero-Inflated Poisson (conteos con exceso de ceros).
+    Requiere paquete \code{pscl}.
+  \item \code{"zinb"} — Zero-Inflated Binomial Negativa. Requiere \code{pscl}.
+  \item \code{"ordinal"} — Respuesta ordinal categorica (escalas Likert, grados de dano).
+    Usa \code{MASS::polr} con link logit proporcional de probabilidades.
+  \item \code{"multinomial"} — Respuesta categorica nominal (>2 categorias sin orden).
+    Requiere paquete \code{nnet}.
+}}
 
-\item{diagnostico_dharma}{Valor lógico. Si es \code{TRUE}, genera
-diagnósticos de residuos simulados con \code{DHARMa}.}
+\item{diagnosticos}{Valor logico. Si es \code{TRUE}, genera diagnosticos de residuos
+simulados con \code{DHARMa} (donde sea aplicable) o graficos diagnosticos base.}
+
+\item{link_gamma}{Link alternativo para familia Gamma. \code{"log"} (predeterminado) o
+\code{"inverse"} o \code{"identity"}.}
+
+\item{tweedie_p}{Parametro de potencia para Tweedie (\code{1 < p < 2}).
+Valor predeterminado: \code{1.5}.}
+
+\item{zi_formula}{Formula para la parte zero-inflada en ZIP/ZINB.
+Por defecto \code{~ 1} (intercepto).}
 }
 \value{
 Un objeto unificado S3 de clase \code{easy_model}.
 }
 \description{
-Ajusta modelos GLM gaussianos, binomiales, Poisson, cuasi-Poisson,
-cuasi-binomiales o binomiales negativas. Para modelos de conteo calcula
-sobredispersión; para binomiales imprime odds ratios; y puede ejecutar
-diagnósticos unificados. Retorna un objeto unificado de clase \code{easy_model}.
+Ajusta modelos GLM con una amplia gama de familias de distribucion adecuadas
+para datos biológicos y agronomicos: gaussiana, binomial (logit, probit, cloglog),
+Poisson, cuasi-Poisson, cuasi-binomial, binomial negativa (MASS), Gamma,
+gaussiana inversa, beta (betareg), Tweedie, zero-inflado Poisson/NB (pscl),
+y ordinal/multinomial (MASS::polr/multinom). Para modelos de conteo calcula
+sobredispersion de Pearson; para binomiales imprime odds ratios; puede ejecutar
+diagnosticos DHARMa. Devuelve un objeto unificado S3 de clase \code{easy_model}.
 }
 \examples{
 \dontrun{
-  modelo <- analizar_glm(iris, Species == "setosa" ~ Sepal.Length, familia = "binomial")
-  summary(modelo)
+  # Binomial (logit) — presencia/ausencia
+  m1 <- analizar_glm(iris, I(Species == "setosa") ~ Sepal.Length, familia = "binomial")
+
+  # Gamma — tiempo de floracion o concentracion mineral
+  datos_gamma <- data.frame(tiempo = rgamma(80, shape = 2, scale = 3),
+                            tratamiento = factor(rep(c("A","B"), each = 40)))
+  m2 <- analizar_glm(datos_gamma, tiempo ~ tratamiento, familia = "gamma")
+
+  # Binomial negativa — conteos con sobredispersion
+  datos_nb <- data.frame(colonias = rnbinom(60, mu = 10, size = 2),
+                         genotipo = factor(rep(1:3, each = 20)))
+  m3 <- analizar_glm(datos_nb, colonias ~ genotipo, familia = "negativa_binomial")
 }
 }

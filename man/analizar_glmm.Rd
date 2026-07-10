@@ -8,44 +8,98 @@ analizar_glmm(
   datos,
   formula_fijos,
   aleatorios,
-  tipo = c("conteos", "presencia_ausencia", "poisson", "binomial", "negativa_binomial",
-    "binomial_negativa"),
-  diagnosticos = TRUE
+  tipo = c("poisson", "conteos", "binomial", "presencia_ausencia", "negativa_binomial",
+    "binomial_negativa", "gamma", "gamma_inverse", "lognormal", "beta", "tweedie",
+    "nbinom2", "nbinom1", "zip", "zinb", "zifgamma", "ordinal", "binomial_cloglog",
+    "binomial_probit"),
+  diagnosticos = TRUE,
+  zi_formula = ~1,
+  link_gamma = "log"
 )
 }
 \arguments{
-\item{datos}{Un \code{data.frame} que contiene las variables del modelo.}
+\item{datos}{Un \code{data.frame} con las variables del modelo.}
 
-\item{formula_fijos}{Una formula de R o una cadena de caracteres para la parte de efectos fijos (ej. \code{y ~ x1}).}
+\item{formula_fijos}{Una formula de R o cadena para la parte de efectos fijos
+(ej. \code{y ~ x1 + x2}).}
 
-\item{aleatorios}{Una cadena de caracteres que define la estructura de efectos aleatorios (ej. \code{"(1 | bloque)"}).}
+\item{aleatorios}{Una cadena que define la estructura de efectos aleatorios
+(ej. \code{"(1 | bloque)"} o \code{"(1 | bloque/parcela)"}).}
 
-\item{tipo}{Tipo de respuesta. Puede ser \code{"conteos"},
-\code{"presencia_ausencia"}, \code{"poisson"}, \code{"binomial"},
-\code{"negativa_binomial"} o \code{"binomial_negativa"}.}
+\item{tipo}{Familia de distribucion. Opciones:
+\itemize{
+  \item \code{"poisson"} / \code{"conteos"} — Conteos con efectos mixtos (lme4).
+  \item \code{"binomial"} / \code{"presencia_ausencia"} — Binaria 0/1 (lme4).
+  \item \code{"negativa_binomial"} / \code{"binomial_negativa"} — Conteos sobredispersos (lme4::glmer.nb).
+  \item \code{"gamma"} — Respuesta continua positiva asimetrica (concentraciones,
+    tiempos de respuesta, rendimiento continuo, masa foliar). Usa glmmTMB con link log.
+  \item \code{"gamma_inverse"} — Gamma con link inverso. Usa glmmTMB.
+  \item \code{"lognormal"} — Respuesta log-normal: datos positivos con distribucion
+    altamente asimetrica donde log(y) es normal (tamanos coloniales, pesos).
+    Usa glmmTMB.
+  \item \code{"beta"} — Proporciones continuas en (0,1) (coberturas vegetales,
+    indices de diversidad, tasas de germination). Usa glmmTMB.
+  \item \code{"tweedie"} — Mezcla de ceros y valores positivos continuos
+    (precipitacion, biomasa con ausencias, produccion con ceros reales).
+    Usa glmmTMB.
+  \item \code{"nbinom2"} — Binomial negativa parametrizacion NB2 (variance = mu + mu^2/phi),
+    mas flexible que glmer.nb. Usa glmmTMB.
+  \item \code{"nbinom1"} — Binomial negativa NB1 (variance lineal en mu). Usa glmmTMB.
+  \item \code{"zip"} — Zero-Inflated Poisson (conteos con exceso de ceros). Usa glmmTMB.
+  \item \code{"zinb"} — Zero-Inflated Binomial Negativa NB2. Usa glmmTMB.
+  \item \code{"zifgamma"} — Zero-Inflated Gamma (respuesta continua positiva con ceros
+    reales, ej. consumo de agua, excrecion). Usa glmmTMB.
+  \item \code{"ordinal"} — Respuesta ordinal con efectos mixtos
+    (escala de dano 1-5, grados de calidad). Requiere \code{ordinal::clmm}.
+  \item \code{"binomial_cloglog"} — Binomial con link complementario log-log.
+    Util para datos de incidencia o supervivencia agrupados. Usa lme4.
+  \item \code{"binomial_probit"} — Binomial con link probit. Usa lme4.
+}}
 
-\item{diagnosticos}{Valor logico. Si es \code{TRUE}, genera diagnosticos de residuos simulados con \code{DHARMa}.}
+\item{diagnosticos}{Valor logico. Si es \code{TRUE}, genera diagnosticos de
+residuos simulados con \code{DHARMa}.}
+
+\item{zi_formula}{Formula para la parte zero-inflada en ZIP/ZINB/ZIGamma.
+Por defecto \code{~ 1} (intercepto).}
+
+\item{link_gamma}{Link para familia Gamma en glmmTMB. \code{"log"} (predeterminado),
+\code{"inverse"}, o \code{"identity"}.}
 }
 \value{
 Un objeto unificado S3 de clase \code{easy_model}.
 }
 \description{
-Esta funcion ajusta un modelo lineal mixto generalizado (GLMM) utilizando \code{lme4::glmer}
-con la familia correspondiente segun el tipo de respuesta (Poisson,
-Binomial o Binomial Negativa).
-En el caso de conteos, calcula e informa el ratio de sobredispersion de Pearson.
-Devuelve un objeto unificado de clase \code{easy_model}.
+Ajusta modelos GLMM con una amplia gama de distribuciones para datos biologicos
+con estructura jerarquica o de medidas repetidas. Usa \code{lme4::glmer} para
+familias basicas y \code{glmmTMB} para distribuciones avanzadas como Gamma,
+Beta, Tweedie, zero-infladas y binomial negativa parametrizada.
+Devuelve un objeto unificado S3 de clase \code{easy_model}.
 }
 \examples{
 \dontrun{
+  # Poisson GLMM — conteos de colonias por bloque
   datos <- data.frame(
-    exito = rbinom(100, 1, 0.5),
-    conteos = rpois(100, lambda = 3),
-    x = rnorm(100),
-    bloque = factor(rep(1:10, each = 10))
+    colonias = rpois(60, lambda = 8),
+    genotipo = factor(rep(1:3, each = 20)),
+    bloque   = factor(rep(1:5, times = 12))
   )
-  # Para presencia/ausencia (Binomial)
-  modelo <- analizar_glmm(datos, exito ~ x, "(1 | bloque)", tipo = "presencia_ausencia")
-  summary(modelo)
+  m1 <- analizar_glmm(datos, colonias ~ genotipo, "(1 | bloque)", tipo = "poisson")
+
+  # Gamma GLMM — concentracion de clorofila
+  datos_clorofila <- data.frame(
+    clorofila = rgamma(80, shape = 3, scale = 2),
+    tratamiento = factor(rep(c("Control","T1","T2","T3"), each = 20)),
+    planta = factor(rep(1:20, times = 4))
+  )
+  m2 <- analizar_glmm(datos_clorofila, clorofila ~ tratamiento,
+                       "(1 | planta)", tipo = "gamma")
+
+  # Beta GLMM — cobertura vegetal (0-1)
+  datos_cob <- data.frame(
+    cobertura = rbeta(80, 2, 3),
+    manejo = factor(rep(c("Convencional","Organico"), each = 40)),
+    parcela = factor(rep(1:10, times = 8))
+  )
+  m3 <- analizar_glmm(datos_cob, cobertura ~ manejo, "(1 | parcela)", tipo = "beta")
 }
 }
