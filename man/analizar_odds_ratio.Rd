@@ -7,7 +7,7 @@
 analizar_odds_ratio(modelo, nivel_confianza = 0.95, incluir_intercepto = FALSE)
 }
 \arguments{
-\item{modelo}{Modelo binomial ajustado.}
+\item{modelo}{Modelo binomial ajustado (clase \code{easy_model} o nativa).}
 
 \item{nivel_confianza}{Nivel de confianza para los intervalos.}
 
@@ -20,5 +20,11 @@ Un \code{data.frame} con terminos, log-odds, odds ratios e
 }
 \description{
 Calcula odds ratios e intervalos de confianza aproximados para modelos
-binomiales ajustados con \code{glm} o \code{glmer}.
+binomiales unificados de clase \code{easy_model} o ajustados nativamente con \code{glm} o \code{glmer}.
+}
+\examples{
+\dontrun{
+  modelo <- analizar_glm(iris, Species == "setosa" ~ Sepal.Length, familia = "binomial")
+  analizar_odds_ratio(modelo)
+}
 }

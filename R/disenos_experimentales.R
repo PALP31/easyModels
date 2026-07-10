@@ -3,7 +3,7 @@
 #' Esta funcion es un wrapper especializado de \code{analizar_lmm} para ajustar y
 #' analizar un diseño de Bloques Completos al Azar (RCBD - Randomized Complete Block Design).
 #' Agrega automaticamente la estructura de efectos aleatorios para el factor de bloqueo
-#' (ej. \code{(1 | bloque)}).
+#' (ej. \code{(1 | bloque)}). Retorna un objeto unificado de clase \code{easy_model}.
 #'
 #' @param datos Un \code{data.frame} que contiene las variables del modelo.
 #' @param formula_fijos Una formula de R o una cadena de caracteres para los efectos fijos (ej. \code{y ~ tratamiento}).
@@ -11,8 +11,9 @@
 #' @param REML Valor logico. Use \code{FALSE} para comparar modelos y \code{TRUE} para estimaciones precisas de varianza.
 #' @param diagnosticos Valor logico. Si es \code{TRUE}, genera graficos de diagnostico de residuos.
 #'
-#' @return Un objeto de la clase \code{merMod} correspondiente al modelo ajustado.
+#' @return Un objeto unificado S3 de clase \code{easy_model} con tipo de modelo "RCBD".
 #' @export
+#' @importFrom cli cli_alert_info cli_abort
 #'
 #' @examples
 #' \dontrun{
@@ -21,17 +22,18 @@
 #'     tratamiento = factor(rep(c("Control", "Trat1", "Trat2"), each = 10)),
 #'     Bloque = factor(rep(1:10, times = 3))
 #'   )
-#'   analizar_bloques_azar(datos, rendimiento ~ tratamiento, "Bloque")
+#'   modelo <- analizar_bloques_azar(datos, rendimiento ~ tratamiento, "Bloque")
+#'   print(modelo)
 #' }
 analizar_bloques_azar <- function(datos, formula_fijos, bloque, REML = TRUE, diagnosticos = TRUE) {
-  message("=== Iniciando Ajuste de Diseño de Bloques Completos al Azar (RCBD) ===")
+  cli::cli_alert_info("=== Iniciando Ajuste de Diseño de Bloques Completos al Azar (RCBD) ===")
   
   if (!is.character(bloque) || length(bloque) != 1) {
-    stop("El argumento 'bloque' debe ser el nombre de una unica columna en 'datos'.", call. = FALSE)
+    cli::cli_abort("El argumento 'bloque' debe ser el nombre de una unica columna en 'datos'.")
   }
   
   if (!(bloque %in% names(datos))) {
-    stop(paste0("El bloque '", bloque, "' no existe en los datos."), call. = FALSE)
+    cli::cli_abort("La columna de bloque '{bloque}' no existe en los datos.")
   }
   
   aleatorios <- paste0("(1 | ", bloque, ")")
@@ -44,6 +46,7 @@ analizar_bloques_azar <- function(datos, formula_fijos, bloque, REML = TRUE, dia
     diagnosticos = diagnosticos
   )
   
+  modelo$tipo_modelo <- "RCBD"
   return(modelo)
 }
 
@@ -53,8 +56,7 @@ analizar_bloques_azar <- function(datos, formula_fijos, bloque, REML = TRUE, dia
 #' parcelas divididas (Split-Plot), comun en experimentos biologicos y agricolas
 #' (por ejemplo, donde un factor de estres como temperatura se aplica a la parcela
 #' principal y otro factor como genotipo a la subparcela).
-#' Automatiza la especificacion de efectos aleatorios agregando el error de la
-#' parcela principal: \code{(1 | bloque) + (1 | bloque:parcela_principal)}.
+#' Retorna un objeto unificado de clase combinada \code{c("easy_splitplot", "easy_model")}.
 #'
 #' @param datos Un \code{data.frame} que contiene las variables del modelo.
 #' @param formula_fijos Una formula de R o una cadena de caracteres para la parte de efectos fijos (ej. \code{y ~ principal * subparcela}).
@@ -63,8 +65,9 @@ analizar_bloques_azar <- function(datos, formula_fijos, bloque, REML = TRUE, dia
 #' @param REML Valor logico. Use \code{TRUE} para estimaciones finales de componentes de varianza.
 #' @param diagnosticos Valor logico. Si es \code{TRUE}, genera graficos de diagnostico de residuos.
 #'
-#' @return Un objeto de la clase \code{merMod} correspondiente al modelo ajustado.
+#' @return Un objeto unificado S3 de clase combinada \code{c("easy_splitplot", "easy_model")} con tipo de modelo "Split-Plot".
 #' @export
+#' @importFrom cli cli_alert_info cli_abort
 #'
 #' @examples
 #' \dontrun{
@@ -75,34 +78,34 @@ analizar_bloques_azar <- function(datos, formula_fijos, bloque, REML = TRUE, dia
 #'     Bloque = factor(rep(1:4, times = 12))
 #'   )
 #'   # El riego se aplica a nivel de parcela principal y el genotipo a nivel de subparcela
-#'   analizar_parcelas_divididas(
+#'   modelo <- analizar_parcelas_divididas(
 #'     datos = datos,
 #'     formula_fijos = rendimiento ~ Riego * Genotipo,
 #'     bloque = "Bloque",
 #'     parcela_principal = "Riego"
 #'   )
+#'   print(modelo)
 #' }
 analizar_parcelas_divididas <- function(datos, formula_fijos, bloque, parcela_principal, REML = TRUE, diagnosticos = TRUE) {
-  message("=== Iniciando Ajuste de Diseño de Parcelas Divididas (Split-Plot) ===")
+  cli::cli_alert_info("=== Iniciando Ajuste de Diseño de Parcelas Divididas (Split-Plot) ===")
   
   if (!is.character(bloque) || length(bloque) != 1) {
-    stop("El argumento 'bloque' debe ser el nombre de una unica columna en 'datos'.", call. = FALSE)
+    cli::cli_abort("El argumento 'bloque' debe ser el nombre de una unica columna en 'datos'.")
   }
   
   if (!(bloque %in% names(datos))) {
-    stop(paste0("El bloque '", bloque, "' no existe en los datos."), call. = FALSE)
+    cli::cli_abort("La columna de bloque '{bloque}' no existe en los datos.")
   }
   
   if (!is.character(parcela_principal) || length(parcela_principal) != 1) {
-    stop("El argumento 'parcela_principal' debe ser el nombre de una unica columna en 'datos'.", call. = FALSE)
+    cli::cli_abort("El argumento 'parcela_principal' debe ser el nombre de una unica columna en 'datos'.")
   }
   
   if (!(parcela_principal %in% names(datos))) {
-    stop(paste0("La parcela principal '", parcela_principal, "' no existe en los datos."), call. = FALSE)
+    cli::cli_abort("La columna de parcela principal '{parcela_principal}' no existe en los datos.")
   }
   
   # Error de parcela principal: bloque:parcela_principal
-  # Representa la restriccion de aleatorizacion de la parcela principal dentro de cada bloque.
   aleatorios <- paste0("(1 | ", bloque, ") + (1 | ", bloque, ":", parcela_principal, ")")
   
   modelo <- analizar_lmm(
@@ -113,5 +116,7 @@ analizar_parcelas_divididas <- function(datos, formula_fijos, bloque, parcela_pr
     diagnosticos = diagnosticos
   )
   
+  modelo$tipo_modelo <- "Split-Plot"
+  class(modelo) <- c("easy_splitplot", "easy_model")
   return(modelo)
 }

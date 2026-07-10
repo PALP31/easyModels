@@ -2,22 +2,28 @@
 % Please edit documentation in R/analizar_lm.R
 \name{analizar_lm}
 \alias{analizar_lm}
-\title{Ajustar y analizar un modelo lineal}
+\title{Ajustar y analizar un modelo lineal (LM)}
 \usage{
 analizar_lm(datos, formula, diagnosticos = TRUE)
 }
 \arguments{
 \item{datos}{Un \code{data.frame} con las variables del modelo.}
 
-\item{formula}{Una formula de R para el modelo lineal.}
+\item{formula}{Una fórmula de R para el modelo lineal.}
 
-\item{diagnosticos}{Valor logico. Si es \code{TRUE}, muestra graficos de
-residuos, Q-Q plot, escala-localizacion y distancia de Cook.}
+\item{diagnosticos}{Valor lógico. Si es \code{TRUE}, muestra gráficos de
+residuos, Q-Q plot, escala-localización y distancia de Cook.}
 }
 \value{
-Un objeto de clase \code{lm}.
+Un objeto unificado S3 de clase \code{easy_model}.
 }
 \description{
 Ajusta un modelo lineal con \code{stats::lm}, imprime el resumen y, de forma
-opcional, genera diagnosticos clasicos para modelos gaussianos.
+opcional, genera diagnósticos clásicos para modelos gaussianos. Retorna un objeto unificado de clase \code{easy_model}.
+}
+\examples{
+\dontrun{
+  modelo <- analizar_lm(iris, Sepal.Length ~ Species)
+  summary(modelo)
+}
 }

@@ -27,15 +27,14 @@ analizar_parcelas_divididas(
 \item{diagnosticos}{Valor logico. Si es \code{TRUE}, genera graficos de diagnostico de residuos.}
 }
 \value{
-Un objeto de la clase \code{merMod} correspondiente al modelo ajustado.
+Un objeto unificado S3 de clase combinada \code{c("easy_splitplot", "easy_model")} con tipo de modelo "Split-Plot".
 }
 \description{
 Esta funcion ajusta y analiza un modelo lineal mixto para un diseño de
 parcelas divididas (Split-Plot), comun en experimentos biologicos y agricolas
 (por ejemplo, donde un factor de estres como temperatura se aplica a la parcela
 principal y otro factor como genotipo a la subparcela).
-Automatiza la especificacion de efectos aleatorios agregando el error de la
-parcela principal: \code{(1 | bloque) + (1 | bloque:parcela_principal)}.
+Retorna un objeto unificado de clase combinada \code{c("easy_splitplot", "easy_model")}.
 }
 \examples{
 \dontrun{
@@ -46,11 +45,12 @@ parcela principal: \code{(1 | bloque) + (1 | bloque:parcela_principal)}.
     Bloque = factor(rep(1:4, times = 12))
   )
   # El riego se aplica a nivel de parcela principal y el genotipo a nivel de subparcela
-  analizar_parcelas_divididas(
+  modelo <- analizar_parcelas_divididas(
     datos = datos,
     formula_fijos = rendimiento ~ Riego * Genotipo,
     bloque = "Bloque",
     parcela_principal = "Riego"
   )
+  print(modelo)
 }
 }

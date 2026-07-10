@@ -31,7 +31,7 @@ Luego carga el paquete:
 library(easyModels)
 ```
 
-## Flujo rápido de análisis LMM
+## Flujo rápido de análisis LMM con S3
 
 ```r
 library(easyModels)
@@ -43,20 +43,29 @@ datos <- data.frame(
   bloque = factor(rep(1:10, times = 12))
 )
 
-# 1. Ajustar un modelo lineal mixto
+# 1. Ajustar un modelo lineal mixto (devuelve un objeto S3 de clase easy_model)
 modelo <- analizar_lmm(
   datos = datos,
   formula_fijos = biomasa ~ tratamiento,
-  aleatorios = "(1 | bloque)"
+  aleatorios = "(1 | bloque)",
+  diagnosticos = FALSE
 )
 
-# 2. Revisar diagnosticos
-# analizar_lmm() imprime el resumen y genera graficos diagnosticos basicos.
+# 2. Imprimir información resumida (método print S3 estilizado con cli)
+print(modelo)
 
-# 3. Comparaciones post-hoc
+# 3. Mostrar resumen estadístico detallado y tabla ANOVA tipo III
+summary(modelo)
+
+# 4. Obtener y graficar diagnósticos de rendimiento unificados (R2, ICC, singularidad, DHARMa)
+evaluar_modelo(modelo)
+# o simplemente:
+plot(modelo)
+
+# 5. Comparaciones post-hoc
 posthoc <- obtener_posthoc(modelo, predictor = "tratamiento")
 
-# 4. Grafico de comparaciones
+# 6. Grafico de comparaciones
 grafico <- graficar_posthoc(
   posthoc,
   eje_x = "Comparaciones entre tratamientos",
@@ -65,16 +74,6 @@ grafico <- graficar_posthoc(
 )
 
 print(grafico)
-
-# 5. Grafico de predichos marginales
-predichos <- graficar_predichos(
-  modelo,
-  predictor = "tratamiento",
-  eje_x = "Tratamiento",
-  eje_y = "Biomasa predicha"
-)
-
-print(predichos)
 ```
 
 ## Diseños Experimentales Específicos (Agrícolas y Biológicos)
@@ -268,43 +267,46 @@ DHARMa::testZeroInflation(res)
 
 ## Post-hoc y predichos con `emmeans`
 
-`obtener_posthoc()` usa `emmeans`, por lo que funciona con modelos compatibles como `lm`, `aov`, `glm`, `lmer`, `glmer` y `glmer.nb`. En modelos gaussianos devuelve diferencias estimadas; en modelos binomiales con `tipo_respuesta = "response"` devuelve odds ratios; y en modelos con link log puede devolver razones de tasas.
+`obtener_emmeans()` y `obtener_posthoc()` separan la lógica de medias marginales y contrastes para brindar mayor flexibilidad y robustez. Soportan múltiples predictores (vectores de caracteres) e interacciones, y detectan automáticamente interacciones significativas en la tabla ANOVA, sugiriendo análisis por efectos simples de forma amigable.
 
-El paquete permite pintar automáticamente letras de significancia Tukey (Compact Letter Display - CLD) directamente en `graficar_predichos()` con `mostrar_letras = TRUE` (requiere tener el paquete `multcomp` instalado):
+Si especificas `letras = TRUE` en `obtener_posthoc()`, se integra `multcomp::cld()` para adjuntar una columna `Grupo` de compact letter display (letras Tukey) directamente sobre la tabla de medias estimadas:
 
 ```r
-posthoc <- obtener_posthoc(modelo, "tratamiento", tipo_respuesta = "response")
-graficar_posthoc(posthoc)
+# 1. Obtener emmeans Grid
+medias <- obtener_emmeans(modelo, predictor = "tratamiento")
 
-# Graficar predichos con letras de significancia Tukey
-graficar_predichos(
-  modelo,
-  predictor = "tratamiento",
-  mostrar_letras = TRUE,
-  alfa_letras = 0.05,
-  eje_x = "Tratamiento",
-  eje_y = "Altura Promedio (cm)"
-)
+# 2. Obtener tabla de comparaciones por pares
+posthoc_dif <- obtener_posthoc(modelo, predictor = "tratamiento")
 
-# Predichos separados por otro factor
-graficar_predichos(
-  modelo,
-  predictor = "tratamiento",
-  por = "dosis",
-  tipo_respuesta = "response"
-)
+# 3. Obtener tabla de medias con letras de Tukey asignadas
+medias_letras <- obtener_posthoc(modelo, predictor = "tratamiento", letras = TRUE)
+print(medias_letras)
+
+# 4. Graficar diferencias o medias con letras directamente desde obtener_posthoc
+grafico_cld <- obtener_posthoc(modelo, predictor = "tratamiento", letras = TRUE, graficar = TRUE)
+print(grafico_cld)
 ```
+
+## Arquitectura S3 y Métodos Genéricos
+
+El paquete implementa Programación Orientada a Objetos S3 mediante la clase unificada `easy_model` (y `easy_splitplot` para modelos de parcelas divididas). Esto permite interactuar de manera consistente mediante métodos clásicos de R:
+
+- `print()`: Muestra una caja resumen del modelo formateada con colores mediante `cli`.
+- `summary()`: Imprime el resumen detallado del modelo nativo y calcula la tabla de ANOVA (usando contrastes Tipo III de forma predeterminada para modelos de efectos mixtos o split-plot).
+- `plot()`: Despacha automáticamente los gráficos de diagnóstico residuo-ajustados según la familia (base o DHARMa panel).
 
 ## Funciones principales
 
-- `analizar_lm()`: ajusta modelos lineales con diagnosticos clasicos.
-- `analizar_glm()`: ajusta GLM gaussianos, binomiales, Poisson, cuasi-Poisson y binomial negativa.
-- `analizar_lmm()`: ajusta modelos lineales mixtos con `lme4::lmer`, incluyendo control de `REML`.
-- `analizar_bloques_azar()`: ajusta diseños de Bloques Completos al Azar (RCBD).
-- `analizar_parcelas_divididas()`: ajusta diseños de Parcelas Divididas (Split-Plot) con anidamiento de error.
-- `analizar_glmm()`: ajusta GLMM binomiales, Poisson y binomiales negativas con diagnosticos `DHARMa` y soporte automático para `binomial_negativa`.
-- `analizar_odds_ratio()`: calcula odds ratios e intervalos de confianza para modelos binomiales.
-- `obtener_posthoc()`: calcula comparaciones multiples con `emmeans` para LM, GLM, LMM y GLMM.
+- `analizar_lm()`: ajusta modelos lineales devolviendo un objeto `easy_model`.
+- `analizar_glm()`: ajusta GLM (gaussian, binomial, poisson, cuasi-poisson, etc.) devolviendo un objeto `easy_model`.
+- `analizar_lmm()`: ajusta modelos lineales mixtos con \code{lme4::lmer}, incluyendo control de \code{REML} y devolviendo un objeto \code{easy_model}.
+- `analizar_bloques_azar()`: wrapper para diseños de Bloques Completos al Azar (RCBD).
+- `analizar_parcelas_divididas()`: wrapper para diseños de Parcelas Divididas (Split-Plot) devolviendo un objeto de clase combinada \code{c("easy_splitplot", "easy_model")}.
+- `analizar_glmm()`: ajusta GLMM con soporte integrado para \code{binomial_negativa}.
+- `analizar_odds_ratio()`: calcula odds ratios para modelos binomiales (acepta tanto modelos nativos como de clase \code{easy_model}).
+- `evaluar_modelo()`: extrae y muestra métricas de ajuste de rendimiento (R2 marginal/condicional, ICC, test de sobredispersión, singularidad y gráficos de diagnóstico unificados).
+- `obtener_emmeans()`: extrae las medias marginales estimadas (EMMeans) validando los predictores.
+- `obtener_posthoc()`: realiza comparaciones múltiples con soporte para CLD (letras Tukey) y visualización.
 - `graficar_posthoc()`: grafica diferencias, razones de tasas u odds ratios.
 - `graficar_predichos()`: grafica predichos marginales con soporte para letras de significancia Tukey (CLD).
 

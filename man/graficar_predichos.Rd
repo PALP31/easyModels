@@ -18,7 +18,7 @@ graficar_predichos(
 )
 }
 \arguments{
-\item{modelo}{Modelo ajustado compatible con \code{emmeans}.}
+\item{modelo}{Modelo ajustado (de clase \code{easy_model} o compatible con \code{emmeans}).}
 
 \item{predictor}{Nombre del predictor que se graficara en el eje X.}
 
@@ -48,16 +48,15 @@ Un objeto \code{ggplot}.
 }
 \description{
 Genera graficos de medias marginales estimadas o predichos marginales usando
-\code{emmeans}. Funciona con modelos compatibles con \code{emmeans}, incluidos
+\code{emmeans}. Funciona con modelos unificados de clase \code{easy_model}
+o modelos compatibles con \code{emmeans}, incluidos
 \code{lm}, \code{glm}, \code{lmer} y \code{glmer}.
 Adicionalmente, puede incorporar letras de significancia (Compact Letter Display - CLD)
 para representar diferencias significativas de Tukey.
 }
 \examples{
 \dontrun{
-  modelo <- lm(Sepal.Length ~ Species, data = iris)
-  # Grafico basico
-  graficar_predichos(modelo, "Species")
+  modelo <- analizar_lm(iris, Sepal.Length ~ Species, diagnosticos = FALSE)
   # Grafico con letras de Tukey
   graficar_predichos(modelo, "Species", mostrar_letras = TRUE)
 }

@@ -24,13 +24,13 @@ analizar_bloques_azar(
 \item{diagnosticos}{Valor logico. Si es \code{TRUE}, genera graficos de diagnostico de residuos.}
 }
 \value{
-Un objeto de la clase \code{merMod} correspondiente al modelo ajustado.
+Un objeto unificado S3 de clase \code{easy_model} con tipo de modelo "RCBD".
 }
 \description{
 Esta funcion es un wrapper especializado de \code{analizar_lmm} para ajustar y
 analizar un diseño de Bloques Completos al Azar (RCBD - Randomized Complete Block Design).
 Agrega automaticamente la estructura de efectos aleatorios para el factor de bloqueo
-(ej. \code{(1 | bloque)}).
+(ej. \code{(1 | bloque)}). Retorna un objeto unificado de clase \code{easy_model}.
 }
 \examples{
 \dontrun{
@@ -39,6 +39,7 @@ Agrega automaticamente la estructura de efectos aleatorios para el factor de blo
     tratamiento = factor(rep(c("Control", "Trat1", "Trat2"), each = 10)),
     Bloque = factor(rep(1:10, times = 3))
   )
-  analizar_bloques_azar(datos, rendimiento ~ tratamiento, "Bloque")
+  modelo <- analizar_bloques_azar(datos, rendimiento ~ tratamiento, "Bloque")
+  print(modelo)
 }
 }

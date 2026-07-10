@@ -2,7 +2,7 @@
 % Please edit documentation in R/analizar_glm.R
 \name{analizar_glm}
 \alias{analizar_glm}
-\title{Ajustar y analizar un modelo lineal generalizado}
+\title{Ajustar y analizar un modelo lineal generalizado (GLM)}
 \usage{
 analizar_glm(
   datos,
@@ -15,21 +15,27 @@ analizar_glm(
 \arguments{
 \item{datos}{Un \code{data.frame} con las variables del modelo.}
 
-\item{formula}{Una formula de R para el GLM.}
+\item{formula}{Una fórmula de R para el GLM.}
 
 \item{familia}{Familia del modelo. Puede ser \code{"gaussian"},
 \code{"binomial"}, \code{"poisson"}, \code{"quasibinomial"},
 \code{"quasipoisson"} o \code{"negativa_binomial"}.}
 
-\item{diagnostico_dharma}{Valor logico. Si es \code{TRUE}, genera
-diagnosticos de residuos simulados con \code{DHARMa}.}
+\item{diagnostico_dharma}{Valor lógico. Si es \code{TRUE}, genera
+diagnósticos de residuos simulados con \code{DHARMa}.}
 }
 \value{
-Un objeto de clase \code{glm} o \code{negbin}.
+Un objeto unificado S3 de clase \code{easy_model}.
 }
 \description{
 Ajusta modelos GLM gaussianos, binomiales, Poisson, cuasi-Poisson,
-cuasi-binomiales o binomial negativa. Para modelos de conteo calcula
-sobredispersion; para binomiales imprime odds ratios; y puede ejecutar
-diagnosticos con \code{DHARMa}.
+cuasi-binomiales o binomiales negativas. Para modelos de conteo calcula
+sobredispersión; para binomiales imprime odds ratios; y puede ejecutar
+diagnósticos unificados. Retorna un objeto unificado de clase \code{easy_model}.
+}
+\examples{
+\dontrun{
+  modelo <- analizar_glm(iris, Species == "setosa" ~ Sepal.Length, familia = "binomial")
+  summary(modelo)
+}
 }

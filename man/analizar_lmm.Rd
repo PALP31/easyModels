@@ -15,24 +15,23 @@ analizar_lmm(
 \arguments{
 \item{datos}{Un \code{data.frame} que contiene las variables del modelo.}
 
-\item{formula_fijos}{Una formula de R o una cadena de caracteres para la parte de efectos fijos (ej. \code{y ~ x1}).}
+\item{formula_fijos}{Una fórmula de R o una cadena de caracteres para la parte de efectos fijos (ej. \code{y ~ x1}).}
 
 \item{aleatorios}{Una cadena de caracteres que define la estructura de efectos aleatorios (ej. \code{"(1 | bloque)"}).}
 
-\item{REML}{Valor logico. Use \code{FALSE} para comparar modelos con
+\item{REML}{Valor lógico. Use \code{FALSE} para comparar modelos con
 distintos efectos fijos y \code{TRUE} para el modelo final gaussiano.}
 
-\item{diagnosticos}{Valor logico. Si es \code{TRUE}, muestra graficos de
-diagnostico de residuos.}
+\item{diagnosticos}{Valor lógico. Si es \code{TRUE}, muestra gráficos de
+diagnóstico de residuos.}
 }
 \value{
-Un objeto de la clase \code{merMod} correspondiente al modelo ajustado.
+Un objeto unificado S3 de clase \code{easy_model}.
 }
 \description{
 Esta funcion ajusta un modelo lineal mixto (LMM) utilizando \code{lme4::lmer}.
-Adicionalmente, genera graficos de diagnostico de residuos (Homocedasticidad y Q-Q plot)
-en una sola ventana grafica, imprime el resumen (\code{summary}) en la consola y
-devuelve el objeto del modelo ajustado para su uso en analisis posteriores (ej. post-hoc).
+Adicionalmente, genera gráficos de diagnóstico de residuos (Homocedasticidad y Q-Q plot)
+en una sola ventana gráfica y devuelve un objeto unificado de clase \code{easy_model}.
 }
 \examples{
 \dontrun{
@@ -41,6 +40,7 @@ devuelve el objeto del modelo ajustado para su uso en analisis posteriores (ej. 
     x = rnorm(100),
     bloque = factor(rep(1:10, each = 10))
   )
-  analizar_lmm(datos, y ~ x, "(1 | bloque)")
+  modelo <- analizar_lmm(datos, y ~ x, "(1 | bloque)")
+  summary(modelo)
 }
 }

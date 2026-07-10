@@ -27,14 +27,14 @@ analizar_glmm(
 \item{diagnostico_dharma}{Valor logico. Si es \code{TRUE}, genera diagnosticos de residuos simulados con \code{DHARMa}.}
 }
 \value{
-Un objeto de la clase \code{merMod} (ajuste de glmer) con el modelo ajustado.
+Un objeto unificado S3 de clase \code{easy_model}.
 }
 \description{
 Esta funcion ajusta un modelo lineal mixto generalizado (GLMM) utilizando \code{lme4::glmer}
 con la familia correspondiente segun el tipo de respuesta (Poisson,
 Binomial o Binomial Negativa).
-En el caso de conteos, calcula e informa el ratio de sobredispersion de Pearson. Imprime el resumen
-(\code{summary}) del modelo en la consola y devuelve el objeto del modelo ajustado.
+En el caso de conteos, calcula e informa el ratio de sobredispersion de Pearson.
+Devuelve un objeto unificado de clase \code{easy_model}.
 }
 \examples{
 \dontrun{
@@ -45,8 +45,7 @@ En el caso de conteos, calcula e informa el ratio de sobredispersion de Pearson.
     bloque = factor(rep(1:10, each = 10))
   )
   # Para presencia/ausencia (Binomial)
-  analizar_glmm(datos, exito ~ x, "(1 | bloque)", tipo = "presencia_ausencia")
-  # Para conteos (Poisson)
-  analizar_glmm(datos, conteos ~ x, "(1 | bloque)", tipo = "conteos")
+  modelo <- analizar_glmm(datos, exito ~ x, "(1 | bloque)", tipo = "presencia_ausencia")
+  summary(modelo)
 }
 }

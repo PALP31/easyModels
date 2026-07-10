@@ -1,12 +1,13 @@
 #' Graficar valores predichos con emmeans
 #'
 #' Genera graficos de medias marginales estimadas o predichos marginales usando
-#' \code{emmeans}. Funciona con modelos compatibles con \code{emmeans}, incluidos
+#' \code{emmeans}. Funciona con modelos unificados de clase \code{easy_model}
+#' o modelos compatibles con \code{emmeans}, incluidos
 #' \code{lm}, \code{glm}, \code{lmer} y \code{glmer}.
 #' Adicionalmente, puede incorporar letras de significancia (Compact Letter Display - CLD)
 #' para representar diferencias significativas de Tukey.
 #'
-#' @param modelo Modelo ajustado compatible con \code{emmeans}.
+#' @param modelo Modelo ajustado (de clase \code{easy_model} o compatible con \code{emmeans}).
 #' @param predictor Nombre del predictor que se graficara en el eje X.
 #' @param por Variable opcional para separar lineas o grupos de color.
 #' @param tipo_respuesta Escala de prediccion: \code{"response"} para la escala
@@ -25,12 +26,14 @@
 #' @return Un objeto \code{ggplot}.
 #' @export
 #' @importFrom rlang .data
+#' @importFrom stats as.formula
+#' @importFrom ggplot2 ggplot aes geom_line geom_point labs theme_classic theme element_text geom_ribbon geom_errorbar geom_text
+#' @importFrom emmeans emmeans
+#' @importFrom multcomp cld
 #'
 #' @examples
 #' \dontrun{
-#'   modelo <- lm(Sepal.Length ~ Species, data = iris)
-#'   # Grafico basico
-#'   graficar_predichos(modelo, "Species")
+#'   modelo <- analizar_lm(iris, Sepal.Length ~ Species, diagnosticos = FALSE)
 #'   # Grafico con letras de Tukey
 #'   graficar_predichos(modelo, "Species", mostrar_letras = TRUE)
 #' }
@@ -44,9 +47,11 @@ graficar_predichos <- function(modelo,
                                eje_y = "Prediccion marginal",
                                mostrar_letras = FALSE,
                                alfa_letras = 0.05) {
-  validar_predictor_modelo(modelo, predictor)
+  m_nat <- extraer_modelo(modelo)
+  
+  validar_predictor_modelo(m_nat, predictor)
   if (!is.null(por)) {
-    validar_predictor_modelo(modelo, por)
+    validar_predictor_modelo(m_nat, por)
   }
 
   specs <- if (is.null(por)) {
@@ -55,7 +60,7 @@ graficar_predichos <- function(modelo,
     stats::as.formula(paste("~", predictor, "|", por))
   }
 
-  emm <- emmeans::emmeans(modelo, specs = specs, at = at)
+  emm <- emmeans::emmeans(m_nat, specs = specs, at = at)
   datos <- as.data.frame(summary(emm, type = tipo_respuesta))
   y_col <- detectar_columna_prediccion(datos)
   intervalo <- detectar_intervalos(datos)
