@@ -58,7 +58,7 @@ evaluar_modelo <- function(modelo) {
   
   # R2
   r2_val <- tryCatch(performance::r2(m_nat), error = function(e) NULL)
-  if (!is.null(r2_val)) {
+  if (!is.null(r2_val) && is.list(r2_val)) {
     if (!is.null(r2_val$R2_conditional)) {
       cli::cli_li("R2 Condicional (efectos fijos + aleatorios): {.val {round(r2_val$R2_conditional, 4)}}")
       cli::cli_li("R2 Marginal (solo efectos fijos): {.val {round(r2_val$R2_marginal, 4)}}")
@@ -68,6 +68,11 @@ evaluar_modelo <- function(modelo) {
         cli::cli_li("R2 Ajustado: {.val {round(r2_val$R2_adjusted, 4)}}")
       }
     }
+  } else if (!is.null(r2_val)) {
+    val_r2 <- as.numeric(r2_val[1])
+    if (!is.na(val_r2)) {
+      cli::cli_li("R2: {.val {round(val_r2, 4)}}")
+    }
   }
   
   # ICC si es mixto
@@ -75,8 +80,26 @@ evaluar_modelo <- function(modelo) {
     icc_val <- tryCatch(performance::icc(m_nat), error = function(e) NULL)
     if (!is.null(icc_val)) {
       # Extract ICC safely
-      val_icc <- if (!is.null(icc_val$ICC_adjusted)) icc_val$ICC_adjusted else icc_val[1]
-      cli::cli_li("ICC (Coeficiente de Correlación Intraclase): {.val {round(val_icc, 4)}}")
+      val_icc <- NA
+      if (is.list(icc_val)) {
+        if (!is.null(icc_val$ICC_adjusted)) {
+          val_icc <- icc_val$ICC_adjusted
+        } else if (!is.null(icc_val$ICC)) {
+          val_icc <- icc_val$ICC
+        }
+      } else if (is.numeric(icc_val)) {
+        if ("ICC_adjusted" %in% names(icc_val)) {
+          val_icc <- icc_val["ICC_adjusted"]
+        } else {
+          val_icc <- icc_val[1]
+        }
+      }
+      
+      if (!is.na(val_icc)) {
+        cli::cli_li("ICC (Coeficiente de Correlación Intraclase): {.val {round(as.numeric(val_icc), 4)}}")
+      } else {
+        cli::cli_li("ICC (Coeficiente de Correlación Intraclase): {.val No disponible (varianza de efectos aleatorios cercana a cero)}")
+      }
     }
     
     # Singularidad

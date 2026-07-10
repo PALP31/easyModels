@@ -29,11 +29,16 @@ print.easy_model <- function(x, ...) {
   
   # R2 si existe
   r2_val <- tryCatch(performance::r2(x$modelo), error = function(e) NULL)
-  if (!is.null(r2_val)) {
+  if (!is.null(r2_val) && is.list(r2_val)) {
     if (!is.null(r2_val$R2_conditional)) {
       cli::cli_alert_info("R2 Marginal: {.val {round(r2_val$R2_marginal, 3)}} | R2 Condicional: {.val {round(r2_val$R2_conditional, 3)}}")
     } else if (!is.null(r2_val$R2)) {
       cli::cli_alert_info("R2: {.val {round(r2_val$R2, 3)}}")
+    }
+  } else if (!is.null(r2_val)) {
+    val_r2 <- as.numeric(r2_val[1])
+    if (!is.na(val_r2)) {
+      cli::cli_alert_info("R2: {.val {round(val_r2, 3)}}")
     }
   }
   
