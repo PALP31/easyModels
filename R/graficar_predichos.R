@@ -1,52 +1,53 @@
 #' Graficar valores predichos con emmeans
 #'
-#' Genera graficos de medias marginales estimadas o predichos marginales usando
+#' Genera gráficos de medias marginales estimadas o predichos marginales usando
 #' \code{emmeans}. Funciona con modelos unificados de clase \code{easy_model}
-#' o modelos compatibles con \code{emmeans}, incluidos
-#' \code{lm}, \code{glm}, \code{lmer} y \code{glmer}.
-#' Adicionalmente, puede incorporar letras de significancia (Compact Letter Display - CLD)
-#' para representar diferencias significativas de Tukey.
+#' o modelos compatibles (\code{lm}, \code{glm}, \code{lmer}, \code{glmmTMB}).
+#' Permite seleccionar formato de puntos, barras de publicación o líneas, aplicar
+#' paletas científicas y agregar letras de significancia (Compact Letter Display - CLD).
 #'
 #' @param modelo Modelo ajustado (de clase \code{easy_model} o compatible con \code{emmeans}).
-#' @param predictor Nombre del predictor que se graficara en el eje X.
-#' @param por Variable opcional para separar lineas o grupos de color.
-#' @param tipo_respuesta Escala de prediccion: \code{"response"} para la escala
-#'   biologica o \code{"link"} para la escala del predictor lineal.
-#' @param at Lista opcional para definir valores especificos de prediccion en
-#'   \code{emmeans}.
-#' @param titulo Titulo del grafico.
+#' @param predictor Nombre del predictor que se graficará en el eje X.
+#' @param por Variable opcional para separar líneas o grupos de color/relleno.
+#' @param tipo_grafico Tipo de representación visual: \code{"puntos"} (por defecto), \code{"barras"} o \code{"lineas"}.
+#' @param tipo_respuesta Escala de predicción: \code{"response"} para la escala biológica o \code{"link"}.
+#' @param at Lista opcional para definir valores específicos de predicción en \code{emmeans}.
+#' @param titulo Título del gráfico.
 #' @param eje_x Etiqueta del eje X.
 #' @param eje_y Etiqueta del eje Y.
-#' @param mostrar_letras Valor logico. Si es \code{TRUE}, calcula y muestra las
-#'   letras de significancia de Tukey sobre los puntos o barras de error.
-#'   (Requiere el paquete \code{multcomp}).
-#' @param alfa_letras Nivel de significancia (alfa) para la asignacion de letras.
-#'   Por defecto, \code{0.05}.
+#' @param mostrar_letras Valor lógico. Si es \code{TRUE}, calcula y muestra las letras de Tukey sobre los puntos o barras.
+#' @param alfa_letras Nivel de significancia (alfa) para la asignación de letras (por defecto \code{0.05}).
+#' @param paleta Paleta de colores: \code{"teal"}, \code{"viridis"}, \code{"cividis"}, \code{"set2"}, \code{"okabe_ito"}.
 #'
-#' @return Un objeto \code{ggplot}.
+#' @return Un objeto \code{ggplot} listo para publicación.
 #' @export
+#'
 #' @importFrom rlang .data
 #' @importFrom stats as.formula
-#' @importFrom ggplot2 ggplot aes geom_line geom_point labs theme_classic theme element_text geom_ribbon geom_errorbar geom_text
+#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_col geom_errorbar geom_ribbon geom_text labs theme_classic theme element_text element_rect scale_color_manual scale_fill_manual scale_color_viridis_d scale_fill_viridis_d scale_color_brewer scale_fill_brewer position_dodge
 #' @importFrom emmeans emmeans
 #' @importFrom multcomp cld
 #'
 #' @examples
 #' \dontrun{
 #'   modelo <- analizar_lm(iris, Sepal.Length ~ Species, diagnosticos = FALSE)
-#'   # Grafico con letras de Tukey
-#'   graficar_predichos(modelo, "Species", mostrar_letras = TRUE)
+#'   # Grafico de barras con letras de Tukey
+#'   graficar_predichos(modelo, "Species", tipo_grafico = "barras", mostrar_letras = TRUE)
 #' }
 graficar_predichos <- function(modelo,
                                predictor,
                                por = NULL,
+                               tipo_grafico = c("puntos", "barras", "lineas"),
                                tipo_respuesta = "response",
                                at = NULL,
                                titulo = "Valores predichos",
                                eje_x = predictor,
-                               eje_y = "Prediccion marginal",
+                               eje_y = "Predicción marginal",
                                mostrar_letras = FALSE,
-                               alfa_letras = 0.05) {
+                               alfa_letras = 0.05,
+                               paleta = c("teal", "viridis", "cividis", "set2", "okabe_ito")) {
+  tipo_grafico <- match.arg(tipo_grafico)
+  paleta <- match.arg(paleta)
   m_nat <- extraer_modelo(modelo)
   
   validar_predictor_modelo(m_nat, predictor)
@@ -69,10 +70,10 @@ graficar_predichos <- function(modelo,
   # Calcular e integrar letras de Tukey (CLD)
   if (isTRUE(mostrar_letras)) {
     if (es_numerico) {
-      warning("mostrar_letras = TRUE se ignora para predictores numericos. Solo se admite para predictores categoricos (factores).", call. = FALSE)
+      warning("mostrar_letras = TRUE se ignora para predictores numéricos. Solo se admite para factores categóricos.", call. = FALSE)
     } else {
       if (!requireNamespace("multcomp", quietly = TRUE)) {
-        stop("El paquete 'multcomp' es necesario para mostrar las letras de significancia. Instale con install.packages('multcomp').", call. = FALSE)
+        stop("El paquete 'multcomp' es necesario para mostrar las letras de significancia. Instálelo con: install.packages('multcomp')", call. = FALSE)
       }
       
       cld_df <- tryCatch({
@@ -94,93 +95,156 @@ graficar_predichos <- function(modelo,
           key_cols <- c(key_cols, por)
         }
         
-        # Combinar
         cld_sub <- cld_df[, c(key_cols, ".group"), drop = FALSE]
         datos <- merge(datos, cld_sub, by = key_cols, all.x = TRUE)
-        
-        # Restaurar orden
         datos[[predictor]] <- factor(datos[[predictor]], levels = orig_levels)
       }
     }
   }
+
+  # Configurar base de ggplot
+  dodge_w <- if (!is.null(por)) 0.8 else 0.2
+  dodge <- ggplot2::position_dodge(width = dodge_w)
 
   grafico <- ggplot2::ggplot(
     datos,
     ggplot2::aes(x = .data[[predictor]], y = .data[[y_col]])
   )
 
-  if (!is.null(por)) {
-    grafico <- grafico +
-      ggplot2::aes(color = .data[[por]], group = .data[[por]])
-  } else {
-    grafico <- grafico +
-      ggplot2::aes(group = 1)
-  }
-
-  if (es_numerico) {
-    grafico <- grafico + ggplot2::geom_line(linewidth = 0.75)
-  }
-
-  grafico <- grafico +
-    ggplot2::geom_point(size = 2.6) +
-    ggplot2::labs(title = titulo, x = eje_x, y = eje_y, color = por) +
-    ggplot2::theme_classic(base_size = 12) +
-    ggplot2::theme(
-      plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
-      axis.title = ggplot2::element_text(face = "bold"),
-      legend.position = if (is.null(por)) "none" else "top"
-    )
-
-  if (!is.null(intervalo)) {
-    if (es_numerico) {
-      if (!is.null(por)) {
-        grafico <- grafico +
-          ggplot2::geom_ribbon(
-            ggplot2::aes(
-              ymin = .data[[intervalo$inferior]],
-              ymax = .data[[intervalo$superior]],
-              fill = .data[[por]]
-            ),
-            alpha = 0.18,
-            color = NA
-          )
-      } else {
-        grafico <- grafico +
-          ggplot2::geom_ribbon(
-            ggplot2::aes(
-              ymin = .data[[intervalo$inferior]],
-              ymax = .data[[intervalo$superior]]
-            ),
-            alpha = 0.18,
-            color = NA,
-            fill = "#2C7FB8"
-          )
-      }
+  # Tipo de gráfico: BARRAS
+  if (tipo_grafico == "barras" && !es_numerico) {
+    if (!is.null(por)) {
+      grafico <- grafico +
+        ggplot2::aes(fill = .data[[por]], group = .data[[por]]) +
+        ggplot2::geom_col(position = dodge, width = 0.7, color = "black", linewidth = 0.3)
     } else {
+      grafico <- grafico +
+        ggplot2::geom_col(fill = "#00A88F", width = 0.6, color = "black", linewidth = 0.3)
+    }
+
+    if (!is.null(intervalo)) {
       grafico <- grafico +
         ggplot2::geom_errorbar(
           ggplot2::aes(
             ymin = .data[[intervalo$inferior]],
             ymax = .data[[intervalo$superior]]
           ),
-          width = 0.12,
-          linewidth = 0.55
+          position = dodge,
+          width = 0.25,
+          linewidth = 0.6
+        )
+    }
+
+  # Tipo de gráfico: LÍNEAS
+  } else if (tipo_grafico == "lineas" || es_numerico) {
+    if (!is.null(por)) {
+      grafico <- grafico +
+        ggplot2::aes(color = .data[[por]], group = .data[[por]]) +
+        ggplot2::geom_line(linewidth = 0.8) +
+        ggplot2::geom_point(size = 2.8)
+    } else {
+      grafico <- grafico +
+        ggplot2::geom_line(ggplot2::aes(group = 1), color = "#00A88F", linewidth = 0.8) +
+        ggplot2::geom_point(color = "#00A88F", size = 2.8)
+    }
+
+    if (!is.null(intervalo)) {
+      if (es_numerico) {
+        if (!is.null(por)) {
+          grafico <- grafico +
+            ggplot2::geom_ribbon(
+              ggplot2::aes(
+                ymin = .data[[intervalo$inferior]],
+                ymax = .data[[intervalo$superior]],
+                fill = .data[[por]]
+              ),
+              alpha = 0.18,
+              color = NA
+            )
+        } else {
+          grafico <- grafico +
+            ggplot2::geom_ribbon(
+              ggplot2::aes(
+                ymin = .data[[intervalo$inferior]],
+                ymax = .data[[intervalo$superior]]
+              ),
+              alpha = 0.18,
+              color = NA,
+              fill = "#00A88F"
+            )
+        }
+      } else {
+        grafico <- grafico +
+          ggplot2::geom_errorbar(
+            ggplot2::aes(
+              ymin = .data[[intervalo$inferior]],
+              ymax = .data[[intervalo$superior]]
+            ),
+            width = 0.18,
+            linewidth = 0.6
+          )
+      }
+    }
+
+  # Tipo de gráfico: PUNTOS (Default)
+  } else {
+    if (!is.null(por)) {
+      grafico <- grafico +
+        ggplot2::aes(color = .data[[por]], group = .data[[por]]) +
+        ggplot2::geom_point(position = dodge, size = 3.0)
+    } else {
+      grafico <- grafico +
+        ggplot2::geom_point(position = dodge, color = "#00A88F", size = 3.0)
+    }
+
+    if (!is.null(intervalo)) {
+      grafico <- grafico +
+        ggplot2::geom_errorbar(
+          ggplot2::aes(
+            ymin = .data[[intervalo$inferior]],
+            ymax = .data[[intervalo$superior]]
+          ),
+          position = dodge,
+          width = 0.18,
+          linewidth = 0.6
         )
     }
   }
 
-  # Agregar letras de significancia al grafico si aplica
-  if (mostrar_letras && !es_numerico && ".group" %in% names(datos)) {
-    y_text_col <- if (!is.null(intervalo)) {
-      intervalo$superior
-    } else {
-      y_col
+  # Paletas de colores
+  if (!is.null(por)) {
+    if (paleta == "teal") {
+      colores_teal <- c("#00A88F", "#E65100", "#1E88E5", "#8E24AA", "#43A047", "#D81B60")
+      grafico <- grafico +
+        ggplot2::scale_color_manual(values = colores_teal) +
+        ggplot2::scale_fill_manual(values = colores_teal)
+    } else if (paleta == "viridis") {
+      grafico <- grafico +
+        ggplot2::scale_color_viridis_d(option = "viridis") +
+        ggplot2::scale_fill_viridis_d(option = "viridis")
+    } else if (paleta == "cividis") {
+      grafico <- grafico +
+        ggplot2::scale_color_viridis_d(option = "cividis") +
+        ggplot2::scale_fill_viridis_d(option = "cividis")
+    } else if (paleta == "set2") {
+      grafico <- grafico +
+        ggplot2::scale_color_brewer(palette = "Set2") +
+        ggplot2::scale_fill_brewer(palette = "Set2")
+    } else if (paleta == "okabe_ito") {
+      okabe <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+      grafico <- grafico +
+        ggplot2::scale_color_manual(values = okabe) +
+        ggplot2::scale_fill_manual(values = okabe)
     }
-    
+  }
+
+  # Agregar letras de significancia al gráfico
+  if (mostrar_letras && !es_numerico && ".group" %in% names(datos)) {
+    y_text_col <- if (!is.null(intervalo)) intervalo$superior else y_col
     y_max <- max(datos[[y_text_col]], na.rm = TRUE)
     y_min <- min(datos[[if (!is.null(intervalo)) intervalo$inferior else y_col]], na.rm = TRUE)
     rango_y <- y_max - y_min
-    offset <- if (rango_y > 0) rango_y * 0.05 else y_max * 0.05
+    offset <- if (rango_y > 0) rango_y * 0.06 else y_max * 0.06
     if (offset == 0) offset <- 0.1
     
     grafico <- grafico +
@@ -189,12 +253,26 @@ graficar_predichos <- function(modelo,
           y = .data[[y_text_col]] + offset,
           label = .data[[".group"]]
         ),
+        position = if (!is.null(por)) dodge else ggplot2::position_identity(),
         vjust = 0,
         fontface = "bold",
         color = "black",
+        size = 3.8,
         show.legend = FALSE
       )
   }
+
+  # Configuración estética final
+  grafico <- grafico +
+    ggplot2::labs(title = titulo, x = eje_x, y = eje_y, color = por, fill = por) +
+    ggplot2::theme_classic(base_size = 12) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(face = "bold", hjust = 0.5, size = 13),
+      axis.title = ggplot2::element_text(face = "bold", size = 11),
+      legend.title = ggplot2::element_text(face = "bold", size = 10),
+      legend.position = if (is.null(por)) "none" else "top",
+      panel.grid.major.y = ggplot2::element_line(color = "grey92", linetype = "dashed")
+    )
 
   return(grafico)
 }

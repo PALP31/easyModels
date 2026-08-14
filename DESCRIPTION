@@ -1,7 +1,7 @@
 Package: easyModels
 Type: Package
-Title: Herramientas Automatizadas para Modelos Lineales, Mixtos y Graficos Cientificos
-Version: 0.3.0
+Title: Herramientas Automatizadas para Modelos Lineales, Mixtos y Gráficos Científicos
+Version: 0.4.0
 Authors@R:
     person(
         given = "Paul Alexander",
@@ -9,14 +9,17 @@ Authors@R:
         email = "paullopezpena@gmail.com",
         role = c("aut", "cre")
     )
-Description: Paquete disenado para automatizar el analisis de disenos experimentales
-    biologicos, incluyendo la jerarquia de modelos lineales (lm, aov), GLM con amplia
-    gama de distribuciones (Gaussian, Binomial, Poisson, Gamma, Beta, Tweedie,
-    zero-infladas, ordinal, multinomial), modelos lineales mixtos (LMM) y GLMM con
-    soporte de glmmTMB y DHARMa para distribuciones avanzadas, analisis post-hoc con
-    emmeans y exportacion de graficos de predichos listos para publicacion.
-    Implementa una arquitectura S3 unificada bajo la clase easy_model con metodos
-    print, summary y plot consistentes.
+Description: Paquete de R disenado para automatizar el analisis estadistico y bioestadistico
+    en ciencias biologicas, agronomia y medicina experimental. Incluye jerarquia completa
+    de modelos lineales (LM), GLM con 17 familias (Gaussiana, Binomial, Poisson, Gamma,
+    Beta, Tweedie, Zero-infladas ZIP/ZINB, Ordinal, Multinomial), modelos lineales mixtos (LMM)
+    y GLMM (16 distribuciones via glmmTMB y lme4). Ofrece wrappers para disenos experimentales
+    clasicos (RCBD, Split-Plot, Cuadrado Latino, Strip-Plot, Medidas Repetidas), auditoria
+    automatizada de supuestos (normalidad, homocedasticidad, VIF, Cook's D), seleccion de modelos
+    con criterios de informacion (AIC, delta-AIC, pesos de Akaike), asistente bioestadistico
+    de transformacion de datos, post-hoc con emmeans y letras Tukey (CLD), y generacion de graficos
+    de predichos (barras, puntos, lineas) e interacciones listos para publicacion cientifica.
+    Arquitectura S3 unificada bajo la clase easy_model.
 License: MIT + file LICENSE
 URL: https://github.com/PALP31/easyModels
 BugReports: https://github.com/PALP31/easyModels/issues
@@ -37,7 +40,8 @@ Imports:
     cli,
     insight,
     performance,
-    car
+    car,
+    knitr
 Suggests:
     glmmTMB,
     betareg,
@@ -45,7 +49,7 @@ Suggests:
     pscl,
     ordinal,
     nnet,
-    knitr,
+    patchwork,
     rmarkdown,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr

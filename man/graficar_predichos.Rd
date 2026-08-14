@@ -8,56 +8,56 @@ graficar_predichos(
   modelo,
   predictor,
   por = NULL,
+  tipo_grafico = c("puntos", "barras", "lineas"),
   tipo_respuesta = "response",
   at = NULL,
   titulo = "Valores predichos",
   eje_x = predictor,
-  eje_y = "Prediccion marginal",
+  eje_y = "Predicción marginal",
   mostrar_letras = FALSE,
-  alfa_letras = 0.05
+  alfa_letras = 0.05,
+  paleta = c("teal", "viridis", "cividis", "set2", "okabe_ito")
 )
 }
 \arguments{
 \item{modelo}{Modelo ajustado (de clase \code{easy_model} o compatible con \code{emmeans}).}
 
-\item{predictor}{Nombre del predictor que se graficara en el eje X.}
+\item{predictor}{Nombre del predictor que se graficará en el eje X.}
 
-\item{por}{Variable opcional para separar lineas o grupos de color.}
+\item{por}{Variable opcional para separar líneas o grupos de color/relleno.}
 
-\item{tipo_respuesta}{Escala de prediccion: \code{"response"} para la escala
-biologica o \code{"link"} para la escala del predictor lineal.}
+\item{tipo_grafico}{Tipo de representación visual: \code{"puntos"} (por defecto), \code{"barras"} o \code{"lineas"}.}
 
-\item{at}{Lista opcional para definir valores especificos de prediccion en
-\code{emmeans}.}
+\item{tipo_respuesta}{Escala de predicción: \code{"response"} para la escala biológica o \code{"link"}.}
 
-\item{titulo}{Titulo del grafico.}
+\item{at}{Lista opcional para definir valores específicos de predicción en \code{emmeans}.}
+
+\item{titulo}{Título del gráfico.}
 
 \item{eje_x}{Etiqueta del eje X.}
 
 \item{eje_y}{Etiqueta del eje Y.}
 
-\item{mostrar_letras}{Valor logico. Si es \code{TRUE}, calcula y muestra las
-letras de significancia de Tukey sobre los puntos o barras de error.
-(Requiere el paquete \code{multcomp}).}
+\item{mostrar_letras}{Valor lógico. Si es \code{TRUE}, calcula y muestra las letras de Tukey sobre los puntos o barras.}
 
-\item{alfa_letras}{Nivel de significancia (alfa) para la asignacion de letras.
-Por defecto, \code{0.05}.}
+\item{alfa_letras}{Nivel de significancia (alfa) para la asignación de letras (por defecto \code{0.05}).}
+
+\item{paleta}{Paleta de colores: \code{"teal"}, \code{"viridis"}, \code{"cividis"}, \code{"set2"}, \code{"okabe_ito"}.}
 }
 \value{
-Un objeto \code{ggplot}.
+Un objeto \code{ggplot} listo para publicación.
 }
 \description{
-Genera graficos de medias marginales estimadas o predichos marginales usando
+Genera gráficos de medias marginales estimadas o predichos marginales usando
 \code{emmeans}. Funciona con modelos unificados de clase \code{easy_model}
-o modelos compatibles con \code{emmeans}, incluidos
-\code{lm}, \code{glm}, \code{lmer} y \code{glmer}.
-Adicionalmente, puede incorporar letras de significancia (Compact Letter Display - CLD)
-para representar diferencias significativas de Tukey.
+o modelos compatibles (\code{lm}, \code{glm}, \code{lmer}, \code{glmmTMB}).
+Permite seleccionar formato de puntos, barras de publicación o líneas, aplicar
+paletas científicas y agregar letras de significancia (Compact Letter Display - CLD).
 }
 \examples{
 \dontrun{
   modelo <- analizar_lm(iris, Sepal.Length ~ Species, diagnosticos = FALSE)
-  # Grafico con letras de Tukey
-  graficar_predichos(modelo, "Species", mostrar_letras = TRUE)
+  # Grafico de barras con letras de Tukey
+  graficar_predichos(modelo, "Species", tipo_grafico = "barras", mostrar_letras = TRUE)
 }
 }

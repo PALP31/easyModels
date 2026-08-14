@@ -15,22 +15,22 @@ analizar_bloques_azar(
 \arguments{
 \item{datos}{Un \code{data.frame} que contiene las variables del modelo.}
 
-\item{formula_fijos}{Una formula de R o una cadena de caracteres para los efectos fijos (ej. \code{y ~ tratamiento}).}
+\item{formula_fijos}{Una fórmula de R o cadena de caracteres para los efectos fijos (ej. \code{y ~ tratamiento}).}
 
-\item{bloque}{Nombre de la columna en el \code{data.frame} que identifica los bloques (como factor o cadena de texto).}
+\item{bloque}{Nombre de la columna en el \code{data.frame} que identifica los bloques.}
 
-\item{REML}{Valor logico. Use \code{FALSE} para comparar modelos y \code{TRUE} para estimaciones precisas de varianza.}
+\item{REML}{Valor lógico. Use \code{TRUE} para estimaciones precisas de varianza.}
 
-\item{diagnosticos}{Valor logico. Si es \code{TRUE}, genera graficos de diagnostico de residuos.}
+\item{diagnosticos}{Valor lógico. Si es \code{TRUE}, genera gráficos de diagnóstico de residuos.}
 }
 \value{
 Un objeto unificado S3 de clase \code{easy_model} con tipo de modelo "RCBD".
 }
 \description{
-Esta funcion es un wrapper especializado de \code{analizar_lmm} para ajustar y
+Esta función es un wrapper especializado de \code{analizar_lmm} para ajustar y
 analizar un diseño de Bloques Completos al Azar (RCBD - Randomized Complete Block Design).
-Agrega automaticamente la estructura de efectos aleatorios para el factor de bloqueo
-(ej. \code{(1 | bloque)}). Retorna un objeto unificado de clase \code{easy_model}.
+Agrega automáticamente la estructura de efectos aleatorios para el factor de bloqueo
+(\code{(1 | bloque)}). Retorna un objeto unificado de clase \code{easy_model}.
 }
 \examples{
 \dontrun{

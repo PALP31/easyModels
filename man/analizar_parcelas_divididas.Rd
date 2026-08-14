@@ -16,24 +16,24 @@ analizar_parcelas_divididas(
 \arguments{
 \item{datos}{Un \code{data.frame} que contiene las variables del modelo.}
 
-\item{formula_fijos}{Una formula de R o una cadena de caracteres para la parte de efectos fijos (ej. \code{y ~ principal * subparcela}).}
+\item{formula_fijos}{Una fórmula de R para la parte de efectos fijos (ej. \code{y ~ riego * genotipo}).}
 
 \item{bloque}{Nombre de la columna que identifica el factor de bloque (ej. \code{"Bloque"}).}
 
 \item{parcela_principal}{Nombre de la columna que identifica el factor asignado a la parcela principal (ej. \code{"Riego"}).}
 
-\item{REML}{Valor logico. Use \code{TRUE} para estimaciones finales de componentes de varianza.}
+\item{REML}{Valor lógico. Use \code{TRUE} para estimaciones de componentes de varianza.}
 
-\item{diagnosticos}{Valor logico. Si es \code{TRUE}, genera graficos de diagnostico de residuos.}
+\item{diagnosticos}{Valor lógico. Si es \code{TRUE}, genera gráficos de diagnóstico de residuos.}
 }
 \value{
 Un objeto unificado S3 de clase combinada \code{c("easy_splitplot", "easy_model")} con tipo de modelo "Split-Plot".
 }
 \description{
-Esta funcion ajusta y analiza un modelo lineal mixto para un diseño de
-parcelas divididas (Split-Plot), comun en experimentos biologicos y agricolas
-(por ejemplo, donde un factor de estres como temperatura se aplica a la parcela
-principal y otro factor como genotipo a la subparcela).
+Esta función ajusta y analiza un modelo lineal mixto para un diseño de
+parcelas divididas (Split-Plot), estándar en agronomía y ciencias biológicas
+donde un factor principal (ej. riego, calor) se aplica a la parcela mayor y
+un subfactor (ej. genotipo, fertilización) a las subparcelas.
 Retorna un objeto unificado de clase combinada \code{c("easy_splitplot", "easy_model")}.
 }
 \examples{
@@ -44,7 +44,6 @@ Retorna un objeto unificado de clase combinada \code{c("easy_splitplot", "easy_m
     Genotipo = factor(rep(rep(c("G1", "G2", "G3"), each = 8), times = 2)),
     Bloque = factor(rep(1:4, times = 12))
   )
-  # El riego se aplica a nivel de parcela principal y el genotipo a nivel de subparcela
   modelo <- analizar_parcelas_divididas(
     datos = datos,
     formula_fijos = rendimiento ~ Riego * Genotipo,

@@ -1,10 +1,10 @@
 ---
-title: "Guía de Uso de easyModels: Modelos Mixtos y Gráficos Científicos"
+title: "Guía de Uso de easyModels: Modelos Mixtos, Diagnósticos y Gráficos Científicos"
 author: "Paul Alexander Lopez Peña"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Guía de Uso de easyModels: Modelos Mixtos y Gráficos Científicos}
+  %\VignetteIndexEntry{Guía de Uso de easyModels: Modelos Mixtos, Diagnósticos y Gráficos Científicos}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -22,12 +22,14 @@ knitr::opts_chunk$set(
 
 ## Introducción
 
-El paquete `easyModels` proporciona herramientas simplificadas y con "opinión bioestadística" para investigadores y estudiantes en ciencias biológicas y agrícolas. Permite ajustar modelos lineales, generalizados y mixtos sin tener que lidiar con la compleja sintaxis de fórmulas de `lme4`, facilitando además la obtención de análisis post-hoc y gráficos de nivel de publicación con letras de significancia.
+El paquete `easyModels` proporciona herramientas simplificadas y con "opinión bioestadística" para investigadores y estudiantes en ciencias biológicas, agronómicas y médicas. Permite ajustar modelos lineales (LM), generalizados (GLM con 17 familias), modelos lineales mixtos (LMM) y GLMM (16 distribuciones) con una arquitectura S3 unificada (`easy_model`), facilitando además la auditoría de supuestos, selección de modelos por AIC, obtención de análisis post-hoc con letras de significancia (CLD) y gráficos de nivel de publicación.
 
-En esta guía, revisaremos tres casos típicos de análisis:
-1. Un diseño de **Bloques Completos al Azar (RCBD)** con visualización de letras de Tukey (CLD).
-2. Un diseño de **Parcelas Divididas (Split-Plot)** para evaluar estrés.
-3. Un **Modelo Mixto Generalizado (GLMM)** de conteo con sobredispersión y ajuste de **Binomial Negativa**.
+En esta guía, revisaremos las principales herramientas:
+1. Diseños Experimentales Clásicos: **Bloques Completos al Azar (RCBD)**, **Parcelas Divididas (Split-Plot)** y **Medidas Repetidas**.
+2. **Auditoría de Supuestos** con `verificar_supuestos()` y selección de transformaciones con `sugerir_modelo()`.
+3. **Comparación y Selección de Modelos** con `comparar_modelos()`.
+4. **Gráficos Científicos de Publicación** (barras, puntos, interacciones) con letras de Tukey (CLD).
+5. **Modelos Mixtos Generalizados (GLMM)** de conteo con sobredispersión y ajuste de **Binomial Negativa**.
 
 ---
 
@@ -62,39 +64,52 @@ modelo_rcbd <- analizar_bloques_azar(
   formula_fijos = Altura ~ Tratamiento,
   bloque = "Bloque",
   REML = TRUE,
-  diagnosticos = TRUE
+  diagnosticos = FALSE
 )
 ```
 
-### Gráfico de Predichos con Letras de Tukey (CLD)
-Para presentar los resultados en un manuscrito, es fundamental graficar las medias y sus intervalos de confianza, agregando las letras que resumen las diferencias estadísticas significativas. La función `graficar_predichos()` conecta internamente con `multcomp::cld()` si activamos `mostrar_letras = TRUE`.
+### Gráfico de Barras con Letras de Tukey (CLD)
+Para presentar los resultados en un manuscrito, la función `graficar_predichos()` permite generar gráficos de barras con barras de error y letras de significancia estadística automáticas:
 
 ```{r}
 grafico_rcbd <- graficar_predichos(
   modelo = modelo_rcbd,
   predictor = "Tratamiento",
+  tipo_grafico = "barras",
   mostrar_letras = TRUE,
   alfa_letras = 0.05,
   titulo = "Altura de Plantas de Trigo bajo Estrés Térmico",
   eje_x = "Tratamiento de Temperatura",
-  eje_y = "Altura Promedio (cm)"
+  eje_y = "Altura Promedio (cm)",
+  paleta = "teal"
 )
 
-# Visualizar el grafico
 grafico_rcbd
 ```
 
 ---
 
-## 2. Diseño de Parcelas Divididas (Split-Plot)
+## 2. Auditoría de Supuestos y Sugerencia de Modelos
 
-Este diseño ocurre cuando tenemos dos factores y uno de ellos requiere unidades experimentales más grandes (parcela principal) debido a restricciones operativas (por ejemplo, sistemas de riego, cámaras de calor), mientras que el segundo factor se puede aleatorizar en sub-unidades (subparcelas).
+### `verificar_supuestos()`
+Comprueba de forma integrada normalidad (Shapiro-Wilk), homocedasticidad (Breusch-Pagan), colinealidad (VIF), autocorrelación (Durbin-Watson) y observaciones influyentes (Cook's D):
 
-### Simulación de Datos
-Evaluamos el rendimiento de trigo con dos factores:
-* **Riego** (Secano vs Riego completo), aplicado a nivel de parcela principal (mesa de invernadero).
-* **Genotipo** (G1, G2, G3), aleatorizado en macetas dentro de cada parcela principal.
-* **Bloque** (4 bloques).
+```{r}
+supuestos_rcbd <- verificar_supuestos(modelo_rcbd, silencioso = FALSE)
+```
+
+### `sugerir_modelo()`
+Si tienes dudas sobre qué familia de GLM utilizar para una variable (por ejemplo, biomasa con ceros, severidad de daño en porcentaje, o conteos), `sugerir_modelo()` analiza la distribución empírica y te brinda la recomendación metodológica óptima:
+
+```{r}
+sugerir_modelo(datos_rcbd, "Altura")
+```
+
+---
+
+## 3. Diseño de Parcelas Divididas (Split-Plot)
+
+Este diseño ocurre cuando un factor requiere unidades experimentales mayores (parcela principal, ej. riego o temperatura) y el segundo se aleatoriza en subparcelas (ej. genotipo).
 
 ```{r}
 set.seed(456)
@@ -105,93 +120,74 @@ datos_split <- data.frame(
   Rendimiento = rnorm(48, mean = 8, sd = 1.2)
 )
 
-# Añadimos efectos simulados
 datos_split$Rendimiento <- datos_split$Rendimiento + 
   ifelse(datos_split$Riego == "Secano", -2.1, 0) +
   ifelse(datos_split$Genotipo == "G3" & datos_split$Riego == "Secano", -1.5, 0.5)
 
-head(datos_split)
-```
-
-### Ajuste con `analizar_parcelas_divididas()`
-La función estructurará automáticamente el error de la parcela principal como `(1 | Bloque) + (1 | Bloque:Riego)` para asegurar que las pruebas de hipótesis del factor principal (Riego) utilicen el término de error correcto.
-
-```{r, fig.show='hold'}
 modelo_split <- analizar_parcelas_divididas(
   datos = datos_split,
   formula_fijos = Rendimiento ~ Riego * Genotipo,
   bloque = "Bloque",
   parcela_principal = "Riego",
-  diagnosticos = TRUE
+  diagnosticos = FALSE
 )
 ```
 
-### Análisis Post-Hoc e Interacción
-Podemos obtener las comparaciones de Tukey para evaluar la interacción entre ambos factores:
+### Gráfico de Interacción y Exportación de Tablas
+Podemos visualizar las interacciones con `graficar_interaccion()` y exportar tablas formateadas para publicación con `exportar_tabla_anova()`:
 
 ```{r}
-# Obtener comparaciones post-hoc para la combinacion Riego y Genotipo
-posthoc_split <- obtener_posthoc(modelo_split, "Riego")
-head(posthoc_split)
+graficar_interaccion(
+  modelo = modelo_split,
+  factor_x = "Genotipo",
+  factor_traza = "Riego",
+  titulo = "Interacción Riego × Genotipo en Rendimiento",
+  paleta = "teal"
+)
+
+# Exportar tabla ANOVA lista para Word / Markdown
+exportar_tabla_anova(modelo_split, formato = "data.frame")
 ```
 
 ---
 
-## 3. Modelos Mixtos Generalizados (GLMM) y Binomial Negativa
+## 4. Comparación y Selección de Modelos (`comparar_modelos`)
 
-Cuando la variable respuesta consiste en datos de conteo (por ejemplo, número de pulgones en una hoja o lesiones fúngicas), la distribución de Poisson es la primera opción. Sin embargo, en biología es muy común observar **sobredispersión** (la varianza es mayor que la media).
+Permite comparar modelos anidados o competitivos según criterios de información (AIC, $\Delta AIC$, pesos de Akaike $w_i$, BIC y $R^2$):
 
-### Simulación de Datos
-Contamos el número de lesiones de *Trichoderma* por hoja bajo diferentes dosis de un bioestimulante en 5 invernaderos (bloques aleatorios).
+```{r}
+m1 <- analizar_lm(datos_split, Rendimiento ~ Riego, diagnosticos = FALSE)
+m2 <- analizar_lm(datos_split, Rendimiento ~ Riego + Genotipo, diagnosticos = FALSE)
+m3 <- analizar_lm(datos_split, Rendimiento ~ Riego * Genotipo, diagnosticos = FALSE)
+
+comparar_modelos(m1, m2, m3, nombres = c("Solo_Riego", "Aditivo", "Interaccion"))
+```
+
+---
+
+## 5. Modelos Mixtos Generalizados (GLMM) y Binomial Negativa
+
+Cuando la variable respuesta consiste en datos de conteo con **sobredispersión** (la varianza es mayor que la media), `analizar_glmm()` detecta la dispersión y permite ajustar la distribución Binomial Negativa:
 
 ```{r}
 set.seed(789)
-invernadero <- factor(rep(1:5, each = 16))
-dosis <- factor(rep(rep(c("D0", "D1", "D2", "D3"), each = 4), times = 5))
-# Simulacion de datos con alta sobredispersion
-mu <- rep(c(2, 5, 12, 18), each = 4)
-lesiones <- rnbinom(80, mu = mu, size = 1.5)
-
 datos_glmm <- data.frame(
-  Invernadero = invernadero,
-  Dosis = dosis,
-  Lesiones = lesiones
+  Invernadero = factor(rep(1:5, each = 16)),
+  Dosis = factor(rep(rep(c("D0", "D1", "D2", "D3"), each = 4), times = 5)),
+  Lesiones = rnbinom(80, mu = rep(c(2, 5, 12, 18), each = 4), size = 1.5)
 )
-```
 
-### Detección Automática de Sobredispersion
-Ajustamos un modelo de Poisson normal usando `tipo = "conteos"` (o `"poisson"`):
-
-```{r}
-modelo_poisson <- analizar_glmm(
-  datos = datos_glmm,
-  formula_fijos = Lesiones ~ Dosis,
-  aleatorios = "(1 | Invernadero)",
-  tipo = "poisson",
-  diagnostico_dharma = FALSE  # Desactivado para simplificar la salida de consola
-)
-```
-
-La consola nos muestra una advertencia clara:
-`ADVERTENCIA: El ratio de sobredispersion es mayor a 1.5. Esto sugiere sobredispersion en los datos de conteo.`
-
-### Ajuste con Binomial Negativa (`tipo = "binomial_negativa"`)
-Hacemos caso a la sugerencia y ajustamos el modelo usando la familia Binomial Negativa. Esto llamará internamente a `lme4::glmer.nb()` de forma transparente.
-
-```{r}
 modelo_nb <- analizar_glmm(
   datos = datos_glmm,
   formula_fijos = Lesiones ~ Dosis,
   aleatorios = "(1 | Invernadero)",
   tipo = "binomial_negativa",
-  diagnostico_dharma = FALSE
+  diagnosticos = FALSE
 )
 ```
-
-El ratio de sobredispersión ahora se ajustará correctamente a los parámetros de la distribución Binomial Negativa, protegiendo al análisis de falsos positivos debido a subestimación de errores estándar.
 
 ---
 
 ## Conclusión
 
-El uso de `easyModels` reduce la fricción metodológica al analizar experimentos complejos. Ya no es necesario memorizar la sintaxis de efectos mixtos de `lme4` ni pasar horas estructurando letras de significancia en softwares externos. Con funciones directas como `analizar_bloques_azar()`, `analizar_parcelas_divididas()` y `graficar_predichos(mostrar_letras = TRUE)`, tu flujo de análisis queda completamente documentado y reproducible de principio a fin.
+El paquete `easyModels` reduce la fricción metodológica al analizar experimentos complejos. Ya no es necesario memorizar la sintaxis de efectos mixtos de `lme4` ni pasar horas estructurando letras de significancia o tablas en softwares externos. Con funciones directas como `analizar_bloques_azar()`, `analizar_parcelas_divididas()`, `analizar_medidas_repetidas()`, `verificar_supuestos()`, `comparar_modelos()` y `graficar_predichos()`, tu flujo de análisis queda completamente documentado y reproducible de principio a fin.
