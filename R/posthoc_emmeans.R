@@ -93,21 +93,25 @@ obtener_posthoc <- function(modelo,
   
   # 3. Determinar el retorno basado en letras y graficos
   if (isTRUE(letras)) {
-    cld_res <- tryCatch({
-      if (!requireNamespace("multcomp", quietly = TRUE)) {
-        cli::cli_abort("El paquete 'multcomp' es necesario para generar letras de significancia. Instálelo con: install.packages('multcomp')")
-      }
-      res <- multcomp::cld(emm, Letters = letters, alpha = 0.05, adjust = ajuste, type = tipo_respuesta)
-      df_res <- as.data.frame(res)
-      df_res$Grupo <- gsub(" ", "", as.character(df_res$.group))
-      df_res$.group <- NULL
-      df_res
-    }, error = function(e) {
-      cli::cli_warn("No se pudieron calcular las letras de significancia (CLD): {e$message}")
+    cld_res <- if (requireNamespace("multcomp", quietly = TRUE) &&
+      requireNamespace("multcompView", quietly = TRUE)) {
+      tryCatch({
+        res <- multcomp::cld(emm, Letters = letters, alpha = 0.05, adjust = ajuste, type = tipo_respuesta)
+        df_res <- as.data.frame(res)
+        df_res$Grupo <- gsub(" ", "", as.character(df_res$.group))
+        df_res$.group <- NULL
+        df_res
+      }, error = function(e) {
+        NULL
+      })
+    } else {
       NULL
-    })
+    }
     
     tabla_retorno <- if (!is.null(cld_res)) cld_res else as.data.frame(summary(emm, type = tipo_respuesta))
+    if (!"Grupo" %in% names(tabla_retorno)) {
+      tabla_retorno$Grupo <- NA_character_
+    }
     
     if (isTRUE(graficar)) {
       # Retornar grafico de predichos con letras
