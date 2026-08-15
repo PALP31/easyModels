@@ -120,6 +120,12 @@ exportar_tabla_posthoc <- function(posthoc_res, formato = c("data.frame", "markd
   formato <- match.arg(formato)
   df <- as.data.frame(posthoc_res)
   
+  # Renombrar .group a Grupo para mayor claridad y consistencia
+  if (".group" %in% names(df)) {
+    df$Grupo <- trimws(df$.group)
+    df$.group <- NULL
+  }
+  
   # Formatear columnas numericas
   num_cols <- vapply(df, is.numeric, logical(1))
   df[num_cols] <- lapply(df[num_cols], function(x) round(x, digitos))
