@@ -2,7 +2,7 @@ Package: easyModels
 Type: Package
 Title: Herramientas Automatizadas para Modelos Lineales, Mixtos y Gráficos Científicos
 Version: 0.4.0
-Authors@R:
+Authors@R: 
     person(
         given = "Paul Alexander",
         family = "Lopez Pena",
@@ -37,6 +37,7 @@ Imports:
     rlang,
     MASS,
     multcomp,
+    multcompView,
     cli,
     insight,
     performance,
