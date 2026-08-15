@@ -72,19 +72,19 @@ graficar_predichos <- function(modelo,
     if (es_numerico) {
       warning("mostrar_letras = TRUE se ignora para predictores numéricos. Solo se admite para factores categóricos.", call. = FALSE)
     } else {
-      if (!requireNamespace("multcomp", quietly = TRUE)) {
-        stop("El paquete 'multcomp' es necesario para mostrar las letras de significancia. Instálelo con: install.packages('multcomp')", call. = FALSE)
-      }
-      
-      cld_df <- tryCatch({
-        res <- multcomp::cld(emm, Letters = letters, alpha = alfa_letras, type = tipo_respuesta)
-        df_res <- as.data.frame(res)
-        df_res$.group <- gsub(" ", "", as.character(df_res$.group))
-        df_res
-      }, error = function(e) {
-        warning("No se pudieron calcular las letras de significancia (CLD): ", e$message, call. = FALSE)
+      cld_df <- if (requireNamespace("multcomp", quietly = TRUE) &&
+        requireNamespace("multcompView", quietly = TRUE)) {
+        tryCatch({
+          res <- multcomp::cld(emm, Letters = letters, alpha = alfa_letras, type = tipo_respuesta)
+          df_res <- as.data.frame(res)
+          df_res$.group <- gsub(" ", "", as.character(df_res$.group))
+          df_res
+        }, error = function(e) {
+          NULL
+        })
+      } else {
         NULL
-      })
+      }
       
       if (!is.null(cld_df)) {
         orig_levels <- levels(datos[[predictor]])
