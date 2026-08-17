@@ -108,6 +108,11 @@ analizar_glmm <- function(datos,
                            link_gamma   = "log") {
   cli::cli_alert_info("Iniciando Ajuste de GLMM...")
 
+  formula_fijos <- .validar_entrada_modelo(datos, formula_fijos, "analizar_glmm")
+  if (!is.character(aleatorios) || length(aleatorios) != 1L || !nzchar(aleatorios)) {
+    cli::cli_abort("'aleatorios' debe ser una cadena no vacía, por ejemplo '(1 | bloque)'.")
+  }
+
   tipo <- match.arg(tipo)
   # Aliases
   if (tipo == "conteos")          tipo <- "poisson"
@@ -115,6 +120,7 @@ analizar_glmm <- function(datos,
   if (tipo == "binomial_negativa") tipo <- "negativa_binomial"
 
   formula_completa <- construir_formula_mixta(formula_fijos, aleatorios)
+  .validar_entrada_modelo(datos, formula_completa, "analizar_glmm")
   cli::cli_alert_info("Formula construida: {.code {Reduce(paste, deparse(formula_completa))}}")
 
   # ── Mensajes guía bioestadística ─────────────────────────────────────────────

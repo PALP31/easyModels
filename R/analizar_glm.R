@@ -97,6 +97,7 @@ analizar_glm <- function(datos,
                           tweedie_p   = 1.5,
                           zi_formula  = ~ 1) {
   cli::cli_alert_info("Iniciando ajuste de GLM...")
+  formula <- .validar_entrada_modelo(datos, formula, "analizar_glm")
   familia <- match.arg(familia)
 
   # ── Mensajes bioestadísticos de guía ────────────────────────────────────────

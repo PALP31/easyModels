@@ -37,6 +37,7 @@ especificos (bloques al azar, parcelas divididas, cuadrado latino, strip-plot y 
 }
 \subsection{3. Diagnostico, Supuestos y Seleccion de Modelos}{
   \itemize{
+    \item \code{\link{resumir_ajuste}}: Resumen compacto, exportable y reproducible del ajuste, incluyendo las observaciones utilizadas y excluidas.
     \item \code{\link{verificar_supuestos}}: Auditoria automatica de normalidad, homocedasticidad, multicolinealidad, autocorrelacion y puntos influyentes.
     \item \code{\link{sugerir_modelo}}: Asistente bioestadistico que recomienda la familia de distribucion o transformacion optima (Box-Cox).
     \item \code{\link{comparar_modelos}}: Comparacion y seleccion de modelos segun criterios de informacion (AIC, delta-AIC, pesos de Akaike, BIC, R2).

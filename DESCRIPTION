@@ -1,7 +1,7 @@
 Package: easyModels
 Type: Package
 Title: Herramientas Automatizadas para Modelos Lineales, Mixtos y Gráficos Científicos
-Version: 0.4.1
+Version: 0.4.2
 Authors@R: 
     person(
         given = "Paul Alexander",

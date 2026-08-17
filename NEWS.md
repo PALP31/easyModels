@@ -1,3 +1,11 @@
+# easyModels 0.4.2
+
+### ✨ Experiencia de ajuste más clara y reproducible
+* Se incorporó `resumir_ajuste()`, una salida tabular de una fila con fórmula, familia, enlace, AIC, BIC, R² y el detalle de observaciones totales, utilizadas y excluidas.
+* Los objetos `easy_model` ahora conservan ese detalle de muestra y lo muestran al imprimirse; si se omitieron filas, se advierte de forma explícita para evitar resultados interpretados con una muestra distinta a la esperada.
+* Los cuatro ajustadores principales (`analizar_lm()`, `analizar_glm()`, `analizar_lmm()` y `analizar_glmm()`) validan que los datos sean un `data.frame`, que la fórmula sea válida y que las variables existan antes de invocar el motor estadístico.
+* Se añadieron pruebas de regresión para el resumen de ajuste, el registro de filas omitidas y los mensajes de validación temprana.
+
 # easyModels 0.4.1
 
 ### 📚 Documentación Global del Paquete (`?easyModels`)

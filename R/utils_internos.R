@@ -14,6 +14,72 @@ extraer_modelo <- function(x) {
   return(x)
 }
 
+#' Validar datos y fórmula antes de ajustar un modelo
+#'
+#' Comprueba los errores de entrada más frecuentes antes de delegar el ajuste al
+#' motor estadístico. Es una utilidad interna compartida por los ajustadores del
+#' paquete para que los mensajes de error sean claros y consistentes.
+#'
+#' @param datos Un data.frame con las variables del modelo.
+#' @param formula Una fórmula de R, o una cadena que pueda convertirse en fórmula.
+#' @param funcion Nombre de la función que solicita la validación.
+#'
+#' @return La fórmula validada.
+#' @keywords internal
+.validar_entrada_modelo <- function(datos, formula, funcion) {
+  if (!is.data.frame(datos)) {
+    cli::cli_abort("{funcion}() requiere que 'datos' sea un data.frame.")
+  }
+
+  if (is.character(formula) && length(formula) == 1L && !is.na(formula)) {
+    formula <- tryCatch(
+      stats::as.formula(formula),
+      error = function(e) cli::cli_abort("'formula' no es válida: {conditionMessage(e)}")
+    )
+  }
+
+  if (!inherits(formula, "formula")) {
+    cli::cli_abort("{funcion}() requiere una fórmula de R en 'formula'.")
+  }
+
+  variables <- unique(all.vars(formula))
+  faltantes <- setdiff(variables, names(datos))
+  if (length(faltantes) > 0L) {
+    cli::cli_abort(
+      "No se encontraron estas variables en 'datos': {paste(faltantes, collapse = ', ')}. Variables disponibles: {paste(names(datos), collapse = ', ')}."
+    )
+  }
+
+  formula
+}
+
+#' Resumir las observaciones utilizadas en un ajuste
+#'
+#' @param modelo Un modelo estadístico ajustado.
+#' @param datos El data.frame original, si está disponible.
+#'
+#' @return Una lista con el número total, utilizado y excluido de observaciones.
+#' @keywords internal
+.resumir_observaciones <- function(modelo, datos = NULL) {
+  n_total <- if (is.data.frame(datos)) nrow(datos) else NA_integer_
+  n_utilizadas <- tryCatch(
+    as.integer(nrow(stats::model.frame(modelo))),
+    error = function(e) tryCatch(as.integer(stats::nobs(modelo)), error = function(e2) NA_integer_)
+  )
+
+  n_excluidas <- if (!is.na(n_total) && !is.na(n_utilizadas)) {
+    as.integer(n_total - n_utilizadas)
+  } else {
+    NA_integer_
+  }
+
+  list(
+    observaciones = as.integer(n_total),
+    observaciones_utilizadas = as.integer(n_utilizadas),
+    observaciones_excluidas = n_excluidas
+  )
+}
+
 #' Helper interno para extraccion segura de elementos numericos
 #'
 #' Extrae de forma segura un elemento de un objeto (lista o vector nombrado).
@@ -115,6 +181,8 @@ crear_easy_model <- function(modelo, tipo_modelo, datos, custom_class = NULL) {
   }, error = function(e) {
     NULL
   })
+
+  info_muestra <- .resumir_observaciones(modelo, datos)
   
   # Construir objeto easy_model
   em <- list(
@@ -127,7 +195,7 @@ crear_easy_model <- function(modelo, tipo_modelo, datos, custom_class = NULL) {
     tipo_modelo = tipo_modelo,
     familia = fam,
     link = lnk,
-    info = list()
+    info = info_muestra
   )
   
   class(em) <- if (!is.null(custom_class)) c(custom_class, "easy_model") else "easy_model"

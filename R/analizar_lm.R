@@ -20,6 +20,7 @@
 #' }
 analizar_lm <- function(datos, formula, diagnosticos = TRUE) {
   cli::cli_alert_info("Iniciando ajuste de LM...")
+  formula <- .validar_entrada_modelo(datos, formula, "analizar_lm")
   
   modelo_nat <- tryCatch({
     stats::lm(formula = formula, data = datos)

@@ -1,7 +1,7 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-00e5bc.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.4.1-0077b5.svg)](DESCRIPTION)
+[![Version](https://img.shields.io/badge/version-0.4.2-0077b5.svg)](DESCRIPTION)
 [![R](https://img.shields.io/badge/R-%3E%3D%204.0-276DC3.svg)](https://www.r-project.org/)
 [![Status](https://img.shields.io/badge/Status-Active%20Development-brightgreen.svg)](https://github.com/PALP31/easyModels)
 
@@ -38,7 +38,16 @@ library(easyModels)
 
 ---
 
-## 🌟 Novedades en la Versión 0.4.1
+## 🌟 Novedades en la Versión 0.4.2
+
+* 📋 **Resumen reproducible del ajuste:**
+  - `resumir_ajuste()` devuelve una fila lista para informes con fórmula, familia, AIC, BIC, R² y el número de observaciones usadas/excluidas.
+* 🧭 **Ajustes más transparentes:**
+  - Los objetos `easy_model` ahora informan las filas utilizadas y alertan si se excluyeron observaciones, evitando omisiones silenciosas por datos faltantes.
+* ✅ **Errores de entrada más claros:**
+  - `analizar_lm()`, `analizar_glm()`, `analizar_lmm()` y `analizar_glmm()` verifican datos, fórmulas y variables antes de iniciar el ajuste.
+
+## Novedades en la Versión 0.4.1
 
 * 📚 **Documentación Global del Paquete (`?easyModels`):**
   - Acceso directo a manuales y catálogos de funciones organizados por módulos.

@@ -27,6 +27,19 @@ print.easy_model <- function(x, ...) {
   cli::cli_alert_info("Respuesta: {.emph {x$respuesta}}")
   cli::cli_alert_info("Formula: {.code {formula_str}}")
   cli::cli_alert_info("Distribucion: {.val {x$familia}} (Enlace: {.val {x$link}})")
+
+  info_muestra <- x$info
+  n_total <- .safe_get(info_muestra, "observaciones")
+  n_utilizadas <- .safe_get(info_muestra, "observaciones_utilizadas")
+  n_excluidas <- .safe_get(info_muestra, "observaciones_excluidas")
+  if (!is.na(n_total) && !is.na(n_utilizadas)) {
+    cli::cli_alert_info("Observaciones utilizadas: {.val {n_utilizadas}} de {.val {n_total}}")
+    if (!is.na(n_excluidas) && n_excluidas > 0) {
+      cli::cli_alert_warning(
+        "Se excluyeron {.val {n_excluidas}} filas durante el ajuste, normalmente por valores ausentes. Use resumir_ajuste(modelo) para registrarlo."
+      )
+    }
+  }
   
   # R2 robusto
   r2_val  <- tryCatch(suppressWarnings(performance::r2(x$modelo)), error = function(e) NULL)
@@ -42,7 +55,7 @@ print.easy_model <- function(x, ...) {
     cli::cli_alert_info("R\u00b2: {.val {round(r2_plain, 3)}}")
   }
   
-  cli::cli_alert_success("Modelo listo para analisis post-hoc con 'obtener_posthoc()'.")
+  cli::cli_alert_success("Siguiente paso: revise summary(modelo), verificar_supuestos(modelo) o resumir_ajuste(modelo).")
   invisible(x)
 }
 
@@ -71,6 +84,18 @@ print.easy_splitplot <- function(x, ...) {
   cli::cli_alert_info("Respuesta: {.val {x$respuesta}}")
   cli::cli_alert_info("Formula: {.code {formula_str}}")
   cli::cli_alert_info("Distribucion: {.val {x$familia}} (Enlace: {.val {x$link}})")
+
+  n_total <- .safe_get(x$info, "observaciones")
+  n_utilizadas <- .safe_get(x$info, "observaciones_utilizadas")
+  n_excluidas <- .safe_get(x$info, "observaciones_excluidas")
+  if (!is.na(n_total) && !is.na(n_utilizadas)) {
+    cli::cli_alert_info("Observaciones utilizadas: {.val {n_utilizadas}} de {.val {n_total}}")
+    if (!is.na(n_excluidas) && n_excluidas > 0) {
+      cli::cli_alert_warning(
+        "Se excluyeron {.val {n_excluidas}} filas durante el ajuste, normalmente por valores ausentes."
+      )
+    }
+  }
   
   if (!is.null(x$anova)) {
     cli::cli_alert_success("Efectos aleatorios de parcela principal estructurados correctamente.")

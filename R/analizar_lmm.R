@@ -31,7 +31,12 @@
 #' }
 analizar_lmm <- function(datos, formula_fijos, aleatorios, REML = TRUE, diagnosticos = TRUE) {
   cli::cli_alert_info("Iniciando Ajuste de LMM...")
+  formula_fijos <- .validar_entrada_modelo(datos, formula_fijos, "analizar_lmm")
+  if (!is.character(aleatorios) || length(aleatorios) != 1L || !nzchar(aleatorios)) {
+    cli::cli_abort("'aleatorios' debe ser una cadena no vacía, por ejemplo '(1 | bloque)'.")
+  }
   formula_completa <- construir_formula_mixta(formula_fijos, aleatorios)
+  .validar_entrada_modelo(datos, formula_completa, "analizar_lmm")
   
   cli::cli_alert_info("Fórmula construida: {.code {Reduce(paste, deparse(formula_completa))}}")
   cli::cli_alert_info("Ajustando modelo con lme4::lmer... REML = {REML}")
