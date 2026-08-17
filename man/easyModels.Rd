@@ -14,7 +14,7 @@ El paquete implementa una arquitectura unificada basada en objetos S3 de clase \
 proporcionando una interfaz coherente para modelos lineales clasicos (\code{lm}), modelos
 lineales mixtos (\code{lmer}), modelos lineales generalizados (\code{glm}) y modelos lineales
 mixtos generalizados (\code{glmer} y \code{glmmTMB}), asi como disenos experimentales
-especificos (bloques al azar y parcelas divididas).
+especificos (bloques al azar, parcelas divididas, cuadrado latino, strip-plot y medidas repetidas).
 }
 \section{Funciones Principales}{
 
@@ -22,7 +22,7 @@ especificos (bloques al azar y parcelas divididas).
   \itemize{
     \item \code{\link{analizar_lm}}: Ajuste y diagnostico de Modelos Lineales clasicos (LM).
     \item \code{\link{analizar_lmm}}: Ajuste y evaluacion de Modelos Lineales Mixtos (LMM con \code{lme4}).
-    \item \code{\link{analizar_glm}}: Modelos Lineales Generalizados (GLM) con mas de 15 familias (Gaussian, Binomial, Poisson, Gamma, Beta, Tweedie, etc.).
+    \item \code{\link{analizar_glm}}: Modelos Lineales Generalizados (GLM) con mas de 15 familias (Gaussian, Binomial, Poisson, Gamma, Beta, Tweedie, Zero-infladas, etc.).
     \item \code{\link{analizar_glmm}}: Modelos Lineales Mixtos Generalizados (GLMM) con soporte para distribuciones complejas via \code{lme4} y \code{glmmTMB}.
   }
 }
@@ -30,19 +30,28 @@ especificos (bloques al azar y parcelas divididas).
   \itemize{
     \item \code{\link{analizar_bloques_azar}}: Diseno de Bloques Completos al Azar (RCBD).
     \item \code{\link{analizar_parcelas_divididas}}: Diseno de Parcelas Divididas (Split-Plot) con correcta jerarquia de errores aleatorios.
+    \item \code{\link{analizar_latino}}: Diseno de Cuadrado Latino (LSD) con control de filas y columnas.
+    \item \code{\link{analizar_medidas_repetidas}}: Modelos longitudinales con medidas repetidas en el tiempo.
+    \item \code{\link{analizar_strip_plot}}: Disenos en franjas divididas o bloques cruzados (Strip-Plot).
   }
 }
-\subsection{3. Diagnostico y Evaluacion Unificada}{
+\subsection{3. Diagnostico, Supuestos y Seleccion de Modelos}{
   \itemize{
+    \item \code{\link{verificar_supuestos}}: Auditoria automatica de normalidad, homocedasticidad, multicolinealidad, autocorrelacion y puntos influyentes.
+    \item \code{\link{sugerir_modelo}}: Asistente bioestadistico que recomienda la familia de distribucion o transformacion optima (Box-Cox).
+    \item \code{\link{comparar_modelos}}: Comparacion y seleccion de modelos segun criterios de informacion (AIC, delta-AIC, pesos de Akaike, BIC, R2).
     \item \code{\link{evaluar_modelo}}: Evaluacion integral de bondad de ajuste (AIC, BIC, R2 marginal/condicional, ICC, singularidad, sobredispersion y DHARMa).
-    \item Metodos S3: \code{\link{print.easy_model}}, \code{\link{summary.easy_model}}, \code{\link{plot.easy_model}}.
+    \item Metodos S3: \code{\link{print.easy_model}}, \code{\link{summary.easy_model}}, \code{\link{plot.easy_model}}, \code{\link{extraer_modelo}}.
   }
 }
-\subsection{4. Analisis Post-Hoc y Visualizacion Cientifica}{
+\subsection{4. Analisis Post-Hoc, Tablas y Visualizacion Cientifica}{
   \itemize{
     \item \code{\link{obtener_emmeans}}: Medias marginales estimadas con \code{emmeans}.
     \item \code{\link{obtener_posthoc}}: Comparaciones post-hoc (Tukey, Bonferroni, etc.) y letras de significancia (Compact Letter Display - CLD).
-    \item \code{\link{graficar_predichos}}: Graficos de prediccion y medias ajustadas con barras de error y letras Tukey listos para publicacion.
+    \item \code{\link{exportar_tabla_anova}}: Tablas ANOVA formateadas para markdown/latex con significancia y tamano del efecto.
+    \item \code{\link{exportar_tabla_posthoc}}: Tablas post-hoc formateadas para publicaciones y tesis.
+    \item \code{\link{graficar_predichos}}: Graficos de prediccion y medias ajustadas con barras, puntos o lineas, paletas cientificas y letras Tukey listos para publicacion.
+    \item \code{\link{graficar_interaccion}}: Graficos de efectos simples para interacciones 2-vias.
     \item \code{\link{graficar_posthoc}}: Graficos de contrastes y diferencias de medias con intervalos de confianza.
     \item \code{\link{analizar_odds_ratio}}: Calculo de Odds Ratios e intervalos de confianza para modelos binomiales.
   }
@@ -55,3 +64,4 @@ Utilice \code{browseVignettes("easyModels")} para acceder a la guia completa del
 \author{
 Paul Alexander Lopez Pena (\email{paullopezpena@gmail.com})
 }
+\keyword{package}

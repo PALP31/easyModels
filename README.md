@@ -1,7 +1,7 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-00e5bc.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.4.0-0077b5.svg)](DESCRIPTION)
+[![Version](https://img.shields.io/badge/version-0.4.1-0077b5.svg)](DESCRIPTION)
 [![R](https://img.shields.io/badge/R-%3E%3D%204.0-276DC3.svg)](https://www.r-project.org/)
 [![Status](https://img.shields.io/badge/Status-Active%20Development-brightgreen.svg)](https://github.com/PALP31/easyModels)
 
@@ -31,11 +31,29 @@ Cargar la librería:
 
 ```r
 library(easyModels)
+
+# Acceder a la documentación global y guía del paquete:
+?easyModels
 ```
 
 ---
 
-## 🌟 Novedades en la Versión 0.4.0
+## 🌟 Novedades en la Versión 0.4.1
+
+* 📚 **Documentación Global del Paquete (`?easyModels`):**
+  - Acceso directo a manuales y catálogos de funciones organizados por módulos.
+* 🛠️ **Extracción Robusta de Coeficientes:**
+  - Compatibilidad unificada con `glmmTMB`, `lme4`, `MASS`, `pscl` y `stats` en `obtener_coeficientes_fijos()` y `analizar_odds_ratio()`.
+* 📄 **Estructura S3 `print.summary_easy_model()`:**
+  - Salida limpia para resúmenes estadísticos y tablas ANOVA integradas.
+* 🎨 **Mejoras Visuales en Gráficos Multifactores:**
+  - Ajuste inteligente con `position_dodge()` para evitar superposiciones de puntos, barras y letras Tukey (CLD).
+* 🧪 **Suite de Pruebas Unitarias Completa:**
+  - 80 pruebas unitarias en `testthat` para verificar la estabilidad de todos los modelos y gráficos.
+
+---
+
+## 🌾 Características Principales (Versión 0.4.0)
 
 * 🌾 **Nuevos Diseños Experimentales:**
   - `analizar_latino()`: Cuadrados Latinos (LSD) con control de filas y columnas (LMM o LM).
