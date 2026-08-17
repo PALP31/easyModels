@@ -7,7 +7,7 @@
 obtener_emmeans(modelo, predictor, by = NULL, tipo_respuesta = "response")
 }
 \arguments{
-\item{modelo}{Un objeto de clase \code{easy_model} o un modelo nativo (lm, glm, merMod, etc.).}
+\item{modelo}{Un objeto de clase \code{easy_model} o un modelo nativo (lm, glm, merMod, glmmTMB, etc.).}
 
 \item{predictor}{Vector de caracteres con el nombre de los predictores a evaluar (ej. \code{"tratamiento"} o \code{c("tratamiento", "dosis")}).}
 
@@ -20,7 +20,7 @@ Un objeto de clase \code{emmGrid}.
 }
 \description{
 Esta funcion calcula las medias marginales estimadas (EMMeans) para uno o
-más predictores a partir de un modelo unificado de clase \code{easy_model}
+mas predictores a partir de un modelo unificado de clase \code{easy_model}
 o un modelo nativo.
 }
 \examples{

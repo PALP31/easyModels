@@ -6,12 +6,40 @@
 #' @param x Un objeto de clase \code{easy_model} o un modelo nativo (lm, glm, merMod, glmmTMB, etc.).
 #'
 #' @return El modelo nativo subyacente.
-#' @keywords internal
+#' @export
 extraer_modelo <- function(x) {
   if (inherits(x, "easy_model")) {
     return(x$modelo)
   }
   return(x)
+}
+
+#' Helper interno para extraccion segura de elementos numericos
+#'
+#' Extrae de forma segura un elemento de un objeto (lista o vector nombrado).
+#' Devuelve NA si el objeto no es un vector/lista, si la clave no existe,
+#' o si el valor es NA (incluyendo el NA logico que devuelve performance::icc()
+#' cuando el modelo es singular).
+#'
+#' @param obj Lista o vector nombrado.
+#' @param key Clave a extraer.
+#'
+#' @return Valor numerico o NA.
+#' @keywords internal
+.safe_get <- function(obj, key) {
+  if (is.null(obj)) return(NA)
+  if (is.logical(obj) && length(obj) == 1 && is.na(obj)) return(NA)
+  if (is.list(obj)) {
+    val <- obj[[key]]
+    if (is.null(val)) return(NA)
+    result <- as.numeric(val[1])
+    if (is.na(result)) return(NA)
+    result
+  } else if (is.numeric(obj) && !is.null(names(obj)) && key %in% names(obj)) {
+    as.numeric(obj[key])
+  } else {
+    NA
+  }
 }
 
 #' Crear un objeto unificado de clase easy_model
@@ -28,21 +56,26 @@ extraer_modelo <- function(x) {
 #' @return Un objeto de clase S3 \code{easy_model} (y opcionalmente la subclase especificada).
 #' @keywords internal
 #' @importFrom insight find_formula find_response model_info
-#' @importFrom stats formula anova
+#' @importFrom stats formula anova residuals fitted
 #' @importFrom car Anova
 crear_easy_model <- function(modelo, tipo_modelo, datos, custom_class = NULL) {
   # Obtener formula
   f <- tryCatch({
-    insight::find_formula(modelo)$conditional
+    form_res <- insight::find_formula(modelo)
+    if (is.list(form_res) && !is.null(form_res$conditional)) {
+      form_res$conditional
+    } else {
+      stats::formula(modelo)
+    }
   }, error = function(e) {
-    stats::formula(modelo)
+    tryCatch(stats::formula(modelo), error = function(e2) NULL)
   })
   
   # Obtener respuesta
   resp <- tryCatch({
     insight::find_response(modelo)
   }, error = function(e) {
-    as.character(f[[2]])
+    if (!is.null(f) && length(f) >= 2) as.character(f[[2]]) else "desconocida"
   })
   
   # Obtener familia y link

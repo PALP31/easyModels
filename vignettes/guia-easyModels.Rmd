@@ -176,7 +176,27 @@ datos_glmm <- data.frame(
   Dosis = factor(rep(rep(c("D0", "D1", "D2", "D3"), each = 4), times = 5)),
   Lesiones = rnbinom(80, mu = rep(c(2, 5, 12, 18), each = 4), size = 1.5)
 )
+```
 
+### Detección Automática de Sobredispersión
+
+Ajustamos un modelo de Poisson normal usando `tipo = "conteos"` (o `"poisson"`):
+
+```{r}
+modelo_poisson <- analizar_glmm(
+  datos = datos_glmm,
+  formula_fijos = Lesiones ~ Dosis,
+  aleatorios = "(1 | Invernadero)",
+  tipo = "poisson",
+  diagnosticos = FALSE
+)
+```
+
+### Ajuste con Binomial Negativa (`tipo = "binomial_negativa"`)
+
+Ajustamos el modelo usando la familia Binomial Negativa con `lme4::glmer.nb()`:
+
+```{r}
 modelo_nb <- analizar_glmm(
   datos = datos_glmm,
   formula_fijos = Lesiones ~ Dosis,

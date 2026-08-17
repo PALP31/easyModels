@@ -11,6 +11,9 @@
 
 \item{...}{Argumentos adicionales no utilizados.}
 }
+\value{
+Devuelve el objeto \code{x} de forma invisible.
+}
 \description{
-Muestra un resumen estético específico para modelos de parcelas divididas (Split-Plot).
+Muestra un resumen estetico especifico para modelos de parcelas divididas (Split-Plot).
 }

@@ -27,6 +27,7 @@
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_col geom_errorbar geom_ribbon geom_text labs theme_classic theme element_text element_rect scale_color_manual scale_fill_manual scale_color_viridis_d scale_fill_viridis_d scale_color_brewer scale_fill_brewer position_dodge
 #' @importFrom emmeans emmeans
 #' @importFrom multcomp cld
+#' @importFrom cli cli_warn cli_abort
 #'
 #' @examples
 #' \dontrun{
@@ -50,9 +51,9 @@ graficar_predichos <- function(modelo,
   paleta <- match.arg(paleta)
   m_nat <- extraer_modelo(modelo)
   
-  validar_predictor_modelo(m_nat, predictor)
+  validar_predictor_modelo(modelo, predictor)
   if (!is.null(por)) {
-    validar_predictor_modelo(m_nat, por)
+    validar_predictor_modelo(modelo, por)
   }
 
   specs <- if (is.null(por)) {

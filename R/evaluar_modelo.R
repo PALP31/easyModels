@@ -1,33 +1,9 @@
-# ── Helper interno ────────────────────────────────────────────────────────────
-# Extrae de forma segura un elemento de un objeto (lista o vector nombrado).
-# Devuelve NA si el objeto no es un vector/lista, si la clave no existe,
-# o si el valor es NA (incluyendo el NA lógico que devuelve performance::icc()
-# cuando el modelo es singular).
-.safe_get <- function(obj, key) {
-  if (is.null(obj)) return(NA)
-  # icc()/r2() devuelven logical NA en modelos singulares
-  if (is.logical(obj) && length(obj) == 1 && is.na(obj)) return(NA)
-  if (is.list(obj)) {
-    val <- obj[[key]]
-    if (is.null(val)) return(NA)
-    result <- as.numeric(val[1])
-    if (is.na(result)) return(NA)
-    result
-  } else if (is.numeric(obj) && !is.null(names(obj)) && key %in% names(obj)) {
-    as.numeric(obj[key])
-  } else {
-    NA
-  }
-}
-
-# ── Función principal ─────────────────────────────────────────────────────────
-
 #' Evaluacion de Diagnostico de Modelo Unificada
 #'
 #' Esta funcion combina herramientas de \code{performance}, \code{DHARMa} y
 #' \code{car} para extraer e imprimir de manera estilizada metricas clave de
-#' ajuste de modelos (AIC, BIC, R2, ICC, sobredispersion, singularidad) y
-#' lanzar los graficos de diagnostico correspondientes.
+#' ajuste de modelos (AIC, BIC, R2 marginal y condicional, ICC, sobredispersion, singularidad) y
+#' desplegar los graficos de diagnostico correspondientes (graficos base para LM o residuos simulados DHARMa para GLM/GLMM).
 #'
 #' @param modelo Un objeto ajustado (de clase \code{easy_model} o un modelo nativo).
 #'
@@ -37,14 +13,14 @@
 #' @importFrom stats AIC BIC residuals fitted formula
 #' @importFrom graphics par plot
 #' @importFrom performance r2 icc check_singularity check_overdispersion
-#' @importFrom DHARMa simulateResiduals
+#' @importFrom DHARMa simulateResiduals testDispersion testZeroInflation
 #' @importFrom insight model_info
 #' @importFrom cli cli_h1 cli_h2 cli_alert_info cli_alert_warning cli_alert_success cli_li
 #'
 #' @examples
 #' \dontrun{
-#'   model <- lm(Sepal.Length ~ Species, data = iris)
-#'   evaluar_modelo(model)
+#'   modelo <- analizar_lm(iris, Sepal.Length ~ Species, diagnosticos = FALSE)
+#'   evaluar_modelo(modelo)
 #' }
 evaluar_modelo <- function(modelo) {
   m_nat <- extraer_modelo(modelo)

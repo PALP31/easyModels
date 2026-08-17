@@ -9,10 +9,10 @@
 \arguments{
 \item{object}{Un objeto de clase \code{easy_model}.}
 
-\item{...}{Argumentos adicionales.}
+\item{...}{Argumentos adicionales pasados a \code{summary(object$modelo, ...)}.}
 }
 \value{
-Una lista con el resumen del modelo y la tabla ANOVA.
+Un objeto de clase \code{summary_easy_model} con el resumen nativo y la tabla ANOVA.
 }
 \description{
 Devuelve el resumen estadistico detallado del modelo nativo

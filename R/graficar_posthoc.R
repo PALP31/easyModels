@@ -18,6 +18,8 @@
 #' @return Un objeto \code{ggplot} con las comparaciones post-hoc.
 #' @export
 #' @importFrom rlang .data
+#' @importFrom stats qnorm
+#' @importFrom ggplot2 ggplot aes geom_col geom_errorbar geom_hline scale_fill_manual labs coord_flip theme_classic theme element_text
 #'
 #' @examples
 #' \dontrun{

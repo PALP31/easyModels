@@ -10,10 +10,10 @@ detectar_interaccion_significativa(modelo)
 \item{modelo}{Un objeto de clase \code{easy_model} o un modelo nativo.}
 }
 \value{
-Valor lógico: \code{TRUE} si existe interacción significativa, de lo contrario \code{FALSE}.
+Valor logico: \code{TRUE} si existe interaccion significativa, de lo contrario \code{FALSE}.
 }
 \description{
 Helper interno que inspecciona la tabla de ANOVA del modelo para detectar
-si existe algún término de interacción significativo (p < 0.05).
+si existe algun termino de interaccion significativo (p < 0.05).
 }
 \keyword{internal}

@@ -9,22 +9,22 @@ analizar_odds_ratio(modelo, nivel_confianza = 0.95, incluir_intercepto = FALSE)
 \arguments{
 \item{modelo}{Modelo binomial ajustado (clase \code{easy_model} o nativa).}
 
-\item{nivel_confianza}{Nivel de confianza para los intervalos.}
+\item{nivel_confianza}{Nivel de confianza para los intervalos (por defecto \code{0.95}).}
 
-\item{incluir_intercepto}{Valor logico. Si es \code{FALSE}, elimina el
+\item{incluir_intercepto}{Valor logico. Si es \code{FALSE} (predeterminado), excluye el
 intercepto de la tabla final.}
 }
 \value{
-Un \code{data.frame} con terminos, log-odds, odds ratios e
-  intervalos de confianza.
+Un \code{data.frame} con terminos, log-odds, errores estandar (SE), odds ratios (OR) e
+  intervalos de confianza (\code{IC_inf}, \code{IC_sup}).
 }
 \description{
-Calcula odds ratios e intervalos de confianza aproximados para modelos
-binomiales unificados de clase \code{easy_model} o ajustados nativamente con \code{glm} o \code{glmer}.
+Calcula odds ratios e intervalos de confianza para modelos
+binomiales unificados de clase \code{easy_model} o ajustados nativamente con \code{glm}, \code{glmer} o \code{glmmTMB}.
 }
 \examples{
 \dontrun{
-  modelo <- analizar_glm(iris, Species == "setosa" ~ Sepal.Length, familia = "binomial")
+  modelo <- analizar_glm(iris, I(Species == "setosa") ~ Sepal.Length, familia = "binomial")
   analizar_odds_ratio(modelo)
 }
 }

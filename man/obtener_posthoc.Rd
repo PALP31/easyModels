@@ -2,7 +2,7 @@
 % Please edit documentation in R/posthoc_emmeans.R
 \name{obtener_posthoc}
 \alias{obtener_posthoc}
-\title{Obtener comparaciones múltiples post-hoc}
+\title{Obtener comparaciones multiples post-hoc}
 \usage{
 obtener_posthoc(
   modelo,
@@ -19,29 +19,29 @@ obtener_posthoc(
 \arguments{
 \item{modelo}{Un objeto de clase \code{easy_model} o un modelo nativo.}
 
-\item{predictor}{Vector de caracteres con el nombre de los predictores (ej. \code{c("Tratamiento", "Dosis")}).}
+\item{predictor}{Vector de caracteres con el nombre de los predictores (ej. \code{"Tratamiento"} o \code{c("Tratamiento", "Dosis")}).}
 
 \item{by}{Vector de caracteres opcional con variables condicionantes (agrupadoras).}
 
 \item{contraste}{Tipo de contraste. Por defecto, \code{"pairwise"}.}
 
-\item{ajuste}{Método de ajuste de p-valores. Por defecto, \code{"tukey"}.}
+\item{ajuste}{Metodo de ajuste de p-valores. Por defecto, \code{"tukey"}.}
 
 \item{tipo_respuesta}{Escala del resultado (ej. \code{"response"} o \code{"link"}).}
 
-\item{infer}{Vector lógico de longitud 2. Define si se calculan intervalos de confianza y pruebas estadísticas (ej. \code{c(TRUE, TRUE)}).}
+\item{infer}{Vector logico de longitud 2. Define si se calculan intervalos de confianza y pruebas estadisticas (ej. \code{c(TRUE, TRUE)}).}
 
-\item{letras}{Valor lógico. Si es \code{TRUE}, calcula e integra letras de significancia Tukey (Compact Letter Display - CLD) devolviendo la tabla de medias en lugar de comparaciones pareadas.}
+\item{letras}{Valor logico. Si es \code{TRUE}, calcula e integra letras de significancia Tukey (Compact Letter Display - CLD) devolviendo la tabla de medias en lugar de comparaciones pareadas.}
 
-\item{graficar}{Valor lógico. Si es \code{TRUE}, genera y retorna un gráfico ggplot listo para publicación (gráfico de comparaciones pareadas si letras es FALSE; gráfico de predichos si letras es TRUE).}
+\item{graficar}{Valor logico. Si es \code{TRUE}, genera y retorna un grafico ggplot listo para publicacion (grafico de comparaciones pareadas si letras es FALSE; grafico de predichos si letras es TRUE).}
 }
 \value{
 Un \code{data.frame} limpio con los contrastes post-hoc (o tabla de medias con letras si \code{letras = TRUE}), o un objeto de clase \code{ggplot} si \code{graficar = TRUE}.
 }
 \description{
-Realiza comparaciones múltiples de medias post-hoc a partir de un modelo
+Realiza comparaciones multiples de medias post-hoc a partir de un modelo
 de clase \code{easy_model} o un modelo nativo. Sostiene multiples predictores,
-genera letras de significancia (CLD) y/o gráficos de publicación.
+genera letras de significancia (CLD) y/o graficos de publicacion.
 }
 \examples{
 \dontrun{

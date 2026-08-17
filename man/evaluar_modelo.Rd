@@ -15,12 +15,12 @@ Devuelve de forma invisible el modelo nativo subyacente.
 \description{
 Esta funcion combina herramientas de \code{performance}, \code{DHARMa} y
 \code{car} para extraer e imprimir de manera estilizada metricas clave de
-ajuste de modelos (AIC, BIC, R2, ICC, sobredispersion, singularidad) y
-lanzar los graficos de diagnostico correspondientes.
+ajuste de modelos (AIC, BIC, R2 marginal y condicional, ICC, sobredispersion, singularidad) y
+desplegar los graficos de diagnostico correspondientes (graficos base para LM o residuos simulados DHARMa para GLM/GLMM).
 }
 \examples{
 \dontrun{
-  model <- lm(Sepal.Length ~ Species, data = iris)
-  evaluar_modelo(model)
+  modelo <- analizar_lm(iris, Sepal.Length ~ Species, diagnosticos = FALSE)
+  evaluar_modelo(modelo)
 }
 }

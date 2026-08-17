@@ -1,10 +1,10 @@
 #' Obtener medias marginales estimadas (EMMeans)
 #'
 #' Esta funcion calcula las medias marginales estimadas (EMMeans) para uno o
-#' más predictores a partir de un modelo unificado de clase \code{easy_model}
+#' mas predictores a partir de un modelo unificado de clase \code{easy_model}
 #' o un modelo nativo.
 #'
-#' @param modelo Un objeto de clase \code{easy_model} o un modelo nativo (lm, glm, merMod, etc.).
+#' @param modelo Un objeto de clase \code{easy_model} o un modelo nativo (lm, glm, merMod, glmmTMB, etc.).
 #' @param predictor Vector de caracteres con el nombre de los predictores a evaluar (ej. \code{"tratamiento"} o \code{c("tratamiento", "dosis")}).
 #' @param by Vector de caracteres opcional con las variables condicionantes (ej. \code{"bloque"}).
 #' @param tipo_respuesta Escala del resultado. Use \code{"response"} para la escala de respuesta biologica (probabilidad, tasa, conteos) o \code{"link"} para la escala lineal del predictor.
@@ -24,16 +24,13 @@ obtener_emmeans <- function(modelo, predictor, by = NULL, tipo_respuesta = "resp
   m_nat <- extraer_modelo(modelo)
   
   # Validar existencia de predictores
-  datos_modelo <- stats::model.frame(m_nat)
-  nombres_variables <- names(datos_modelo)
-  
-  todo_pred <- c(predictor, by)
-  if (!all(todo_pred %in% nombres_variables)) {
-    variables_invalidas <- setdiff(todo_pred, nombres_variables)
-    cli::cli_abort(paste0(
-      "Los siguientes predictores no se encuentran en el modelo: ",
-      paste(paste0("'", variables_invalidas, "'"), collapse = ", ")
-    ))
+  for (p in predictor) {
+    validar_predictor_modelo(modelo, p)
+  }
+  if (!is.null(by)) {
+    for (b in by) {
+      validar_predictor_modelo(modelo, b)
+    }
   }
   
   # Llamar a emmeans
@@ -41,27 +38,27 @@ obtener_emmeans <- function(modelo, predictor, by = NULL, tipo_respuesta = "resp
   return(emm)
 }
 
-#' Obtener comparaciones múltiples post-hoc
+#' Obtener comparaciones multiples post-hoc
 #'
-#' Realiza comparaciones múltiples de medias post-hoc a partir de un modelo
+#' Realiza comparaciones multiples de medias post-hoc a partir de un modelo
 #' de clase \code{easy_model} o un modelo nativo. Sostiene multiples predictores,
-#' genera letras de significancia (CLD) y/o gráficos de publicación.
+#' genera letras de significancia (CLD) y/o graficos de publicacion.
 #'
 #' @param modelo Un objeto de clase \code{easy_model} o un modelo nativo.
-#' @param predictor Vector de caracteres con el nombre de los predictores (ej. \code{c("Tratamiento", "Dosis")}).
+#' @param predictor Vector de caracteres con el nombre de los predictores (ej. \code{"Tratamiento"} o \code{c("Tratamiento", "Dosis")}).
 #' @param by Vector de caracteres opcional con variables condicionantes (agrupadoras).
 #' @param contraste Tipo de contraste. Por defecto, \code{"pairwise"}.
-#' @param ajuste Método de ajuste de p-valores. Por defecto, \code{"tukey"}.
+#' @param ajuste Metodo de ajuste de p-valores. Por defecto, \code{"tukey"}.
 #' @param tipo_respuesta Escala del resultado (ej. \code{"response"} o \code{"link"}).
-#' @param infer Vector lógico de longitud 2. Define si se calculan intervalos de confianza y pruebas estadísticas (ej. \code{c(TRUE, TRUE)}).
-#' @param letras Valor lógico. Si es \code{TRUE}, calcula e integra letras de significancia Tukey (Compact Letter Display - CLD) devolviendo la tabla de medias en lugar de comparaciones pareadas.
-#' @param graficar Valor lógico. Si es \code{TRUE}, genera y retorna un gráfico ggplot listo para publicación (gráfico de comparaciones pareadas si letras es FALSE; gráfico de predichos si letras es TRUE).
+#' @param infer Vector logico de longitud 2. Define si se calculan intervalos de confianza y pruebas estadisticas (ej. \code{c(TRUE, TRUE)}).
+#' @param letras Valor logico. Si es \code{TRUE}, calcula e integra letras de significancia Tukey (Compact Letter Display - CLD) devolviendo la tabla de medias en lugar de comparaciones pareadas.
+#' @param graficar Valor logico. Si es \code{TRUE}, genera y retorna un grafico ggplot listo para publicacion (grafico de comparaciones pareadas si letras es FALSE; grafico de predichos si letras es TRUE).
 #'
 #' @return Un \code{data.frame} limpio con los contrastes post-hoc (o tabla de medias con letras si \code{letras = TRUE}), o un objeto de clase \code{ggplot} si \code{graficar = TRUE}.
 #' @export
 #' @importFrom emmeans contrast
 #' @importFrom multcomp cld
-#' @importFrom cli cli_alert_warning cli_warn
+#' @importFrom cli cli_alert_warning cli_warn cli_abort
 #'
 #' @examples
 #' \dontrun{
@@ -84,7 +81,7 @@ obtener_posthoc <- function(modelo,
   # 1. Detectar interacciones significativas en el ANOVA
   if (is.null(by) && detectar_interaccion_significativa(modelo)) {
     cli::cli_alert_warning(
-      "Se detectó una interacción significativa en el ANOVA, pero no se especificó el argumento {.var by}. Considere analizar efectos simples para evitar interpretaciones incorrectas."
+      "Se detecto una interaccion significativa en el ANOVA, pero no se especifico el argumento {.var by}. Considere analizar efectos simples para evitar interpretaciones incorrectas."
     )
   }
   
@@ -144,11 +141,11 @@ obtener_posthoc <- function(modelo,
 #' Detectar interacciones significativas en la tabla ANOVA
 #'
 #' Helper interno que inspecciona la tabla de ANOVA del modelo para detectar
-#' si existe algún término de interacción significativo (p < 0.05).
+#' si existe algun termino de interaccion significativo (p < 0.05).
 #'
 #' @param modelo Un objeto de clase \code{easy_model} o un modelo nativo.
 #'
-#' @return Valor lógico: \code{TRUE} si existe interacción significativa, de lo contrario \code{FALSE}.
+#' @return Valor logico: \code{TRUE} si existe interaccion significativa, de lo contrario \code{FALSE}.
 #' @keywords internal
 #' @importFrom car Anova
 #' @importFrom stats anova

@@ -11,7 +11,10 @@
 
 \item{...}{Argumentos adicionales pasados a \code{evaluar_modelo}.}
 }
+\value{
+Devuelve de forma invisible el modelo subyacente.
+}
 \description{
 Genera y muestra los graficos de diagnostico correspondientes
-según la familia y clase del modelo ajustado.
+segun la familia y clase del modelo ajustado.
 }

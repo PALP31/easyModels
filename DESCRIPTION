@@ -25,9 +25,9 @@ URL: https://github.com/PALP31/easyModels
 BugReports: https://github.com/PALP31/easyModels/issues
 Encoding: UTF-8
 LazyData: true
-Depends:
+Depends: 
     R (>= 4.0)
-Imports:
+Imports: 
     lme4,
     emmeans,
     ggplot2,

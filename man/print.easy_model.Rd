@@ -11,6 +11,9 @@
 
 \item{...}{Argumentos adicionales no utilizados.}
 }
+\value{
+Devuelve el objeto \code{x} de forma invisible.
+}
 \description{
 Muestra un resumen estetico y corto del modelo ajustado utilizando
 cajas y colores del paquete \code{cli}.

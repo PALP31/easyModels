@@ -16,4 +16,3 @@ El modelo nativo subyacente.
 Esta funcion detecta si el objeto de entrada es de clase \code{easy_model}
 y extrae el modelo nativo subyacente. Si ya es un modelo nativo, lo devuelve tal cual.
 }
-\keyword{internal}
