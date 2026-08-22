@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/banner.svg" width="100%" alt="easyModels Banner" />
+  <img src="assets/banner.png" width="100%" alt="easyModels Banner" />
 </div>
 
 # easyModels <img src="man/figures/logo.png" align="right" height="145" alt="easyModels hex logo" />
